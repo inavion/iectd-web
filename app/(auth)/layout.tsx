@@ -8,7 +8,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="flex max-h-[800px] max-w-[430px] flex-col justify-center space-y-12">
           <Image
             src="/assets/images/logo and name.png"
-            alt="logo"
+            alt="logo and name"
             width={224}
             height={84}
             className="h-auto"
