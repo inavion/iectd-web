@@ -9,8 +9,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <Image
             src="/assets/images/logo and name.png"
             alt="logo and name"
-            width={224}
-            height={84}
+            width={200}
+            height={80}
             className="h-auto"
             unoptimized={false}
           />
