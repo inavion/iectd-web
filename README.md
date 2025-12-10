@@ -1,36 +1,183 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iEctD Web Application
 
-## Getting Started
+A modern Next.js web application for iEctD, deployed on AWS Amplify with automatic CI/CD via GitHub Actions.
 
-First, run the development server:
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 20.x or later
+- npm 10.x or later
+
+### Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+iectd-web/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication routes
+│   │   ├── sign-in/
+│   │   └── sign-up/
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/            # React components
+│   ├── ui/               # UI components (shadcn/ui)
+│   └── AuthForm.tsx
+├── lib/                   # Utility functions
+├── public/               # Static assets
+├── infra/                # AWS CDK Infrastructure
+│   ├── bin/
+│   ├── lib/
+│   └── README.md
+└── .github/
+    └── workflows/        # GitHub Actions
+        └── deploy.yml
+```
 
-## Learn More
+## 🏗️ Infrastructure & Deployment
 
-To learn more about Next.js, take a look at the following resources:
+### Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+GitHub (main branch) → GitHub Actions → AWS Amplify → iectd.com
+                           │
+                           └── Lint & Build → Trigger Amplify Deploy
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### AWS Services Used
+- **AWS Amplify**: Hosting with SSR support
+- **Route53**: DNS management for iectd.com
+- **ACM**: SSL/TLS certificates
+- **CloudFront**: CDN (managed by Amplify)
 
-## Deploy on Vercel
+### Deployment Flow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Push to `main` branch** triggers GitHub Actions
+2. **Lint & Build** validation runs
+3. **AWS Amplify deployment** is triggered
+4. **DNS** routes traffic to new deployment
+5. **SSL** is automatically managed
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 Initial Setup Guide
+
+### Step 1: Set Up AWS Infrastructure
+
+```bash
+# Navigate to infrastructure folder
+cd infra
+
+# Install CDK dependencies
+npm install
+
+# Bootstrap CDK (first time only)
+npm run bootstrap
+
+# Deploy infrastructure
+npm run deploy
+```
+
+After deployment, note the **AmplifyAppId** from the output.
+
+### Step 2: Connect GitHub Repository to Amplify
+
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+2. Select your app (iectd-web)
+3. Go to "Hosting environments"
+4. Click "Connect branch" → Select "GitHub"
+5. Authorize and select your repository
+6. Choose the `main` branch
+7. Save and deploy
+
+### Step 3: Configure GitHub Secrets
+
+Go to your GitHub repository → Settings → Secrets and variables → Actions
+
+Add the following secrets:
+
+| Secret Name | Description |
+|-------------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user access key ID |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret access key |
+| `AMPLIFY_APP_ID` | From CDK deployment output |
+| `NEXT_PUBLIC_API_URL` | (Optional) API endpoint URL |
+
+### Step 4: Verify Domain Setup
+
+1. Ensure Route53 hosted zone exists for `iectd.com`
+2. Verify SSL certificate is validated in ACM
+3. Check Amplify domain configuration
+
+## 🔄 Continuous Deployment
+
+### Automatic Deployments
+- Every push to `main` branch triggers automatic deployment
+- GitHub Actions runs lint and build checks
+- On success, triggers Amplify deployment
+
+### Manual Deployment
+```bash
+# Trigger deployment via GitHub Actions
+gh workflow run deploy.yml
+
+# Or via AWS CLI
+aws amplify start-job --app-id YOUR_APP_ID --branch-name main --job-type RELEASE
+```
+
+## 🛠️ Development Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+## 🔐 Environment Variables
+
+Create a `.env.local` file for local development:
+
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=https://api.iectd.com
+
+# Add other environment variables as needed
+```
+
+**Note:** Never commit `.env` files. Use GitHub Secrets for CI/CD.
+
+## 📚 Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **UI Components**: shadcn/ui (Radix UI)
+- **Forms**: React Hook Form + Zod validation
+- **Deployment**: AWS Amplify
+- **Infrastructure**: AWS CDK (TypeScript)
+- **CI/CD**: GitHub Actions
+
+## 🔗 Links
+
+- **Production**: https://iectd.com
+- **Amplify Console**: AWS Amplify Dashboard
+- **GitHub Repository**: Your GitHub repo URL
+
+## 📝 License
+
+Private - All rights reserved.
