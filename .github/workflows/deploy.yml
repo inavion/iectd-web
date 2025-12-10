@@ -1,23 +1,15 @@
-name: Deploy to AWS Amplify
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-      - feature/IECTD-2_ConnectToDomain
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
+      - feature/**
+  pull_request:
+    branches:
+      - main
 
 env:
-  AWS_REGION: ap-southeast-1
   NODE_VERSION: '20'
 
 jobs:
@@ -45,89 +37,10 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
-  deploy:
-    name: Deploy to Amplify
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    # if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Trigger Amplify deployment
+      - name: Build summary
         run: |
-          echo "Starting Amplify deployment..."
-          aws amplify start-job \
-            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-            --branch-name main \
-            --job-type RELEASE
-          echo "Deployment triggered successfully!"
-      
-      - name: Wait for deployment to complete
-        run: |
-          echo "Waiting for deployment to complete..."
-          sleep 30
-          
-          # Get the latest job status
-          JOB_STATUS=$(aws amplify list-jobs \
-            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-            --branch-name main \
-            --max-results 1 \
-            --query 'jobSummaries[0].status' \
-            --output text)
-          
-          echo "Current deployment status: $JOB_STATUS"
-          
-          # Poll for completion (max 10 minutes)
-          COUNTER=0
-          while [ "$JOB_STATUS" = "PENDING" ] || [ "$JOB_STATUS" = "RUNNING" ]; do
-            if [ $COUNTER -ge 20 ]; then
-              echo "Deployment is taking longer than expected. Check Amplify console for status."
-              exit 0
-            fi
-            
-            echo "Deployment in progress... waiting 30 seconds"
-            sleep 30
-            
-            JOB_STATUS=$(aws amplify list-jobs \
-              --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-              --branch-name main \
-              --max-results 1 \
-              --query 'jobSummaries[0].status' \
-              --output text)
-            
-            echo "Current status: $JOB_STATUS"
-            COUNTER=$((COUNTER + 1))
-          done
-          
-          if [ "$JOB_STATUS" = "SUCCEED" ]; then
-            echo "✅ Deployment completed successfully!"
-          else
-            echo "❌ Deployment failed with status: $JOB_STATUS"
-            exit 1
-          fi
-
-  notify:
-    name: Notify on completion
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: always()
-    
-    steps:
-      - name: Deployment notification
-        run: |
-          if [ "${{ needs.deploy.result }}" = "success" ]; then
-            echo "✅ Deployment to iectd.com completed successfully!"
-          else
-            echo "❌ Deployment failed. Please check the logs."
-          fi
+          echo "✅ Build completed successfully!"
+          echo "📝 Deployment will be handled automatically by AWS Amplify"
+          echo "🔗 Monitor deployment at: https://ap-southeast-1.console.aws.amazon.com/amplify/"
 
