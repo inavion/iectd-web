@@ -27,6 +27,22 @@ export class AmplifyStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal('amplify.amazonaws.com'),
       description: `IAM Role for Amplify App ${appName}`,
       roleName: `${appName}-amplify-role-${environment}`,
+      // Add inline policy for additional permissions
+      inlinePolicies: {
+        AmplifySSRPolicy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                'logs:CreateLogGroup',
+                'logs:CreateLogStream',
+                'logs:PutLogEvents',
+              ],
+              resources: ['arn:aws:logs:*:*:*'],
+            }),
+          ],
+        }),
+      },
     });
 
     // Add necessary permissions for Amplify
