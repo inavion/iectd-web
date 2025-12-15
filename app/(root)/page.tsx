@@ -1,11 +1,13 @@
-import Image from "next/image";
+// app/(root)/page.tsx
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 
-export default function Home() {
-  return (
-    <div>
-      <h1 className="h1 center">
-        Iectd Web - a platform for storing documents.
-      </h1>
-    </div>
-  );
+export default async function RootPage() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    redirect("/sign-in");
+  }
+
+  redirect("/dashboard"); // or "/files", "/dashboard", etc.
 }

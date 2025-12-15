@@ -17,7 +17,7 @@ const Sidebar = ({ fullName, avatar, email }: Props) => {
 
   return (
     <aside className="sidebar remove-scrollbar">
-      <Link href="/">
+      <Link href="/dashboard">
         <Image
           src="/assets/images/logo-full-brand.png"
           alt="logo"
