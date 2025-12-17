@@ -2,12 +2,12 @@ import Image from "next/image";
 import FileUploader from "./FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
 
-const Header = () => {
+const Header = ({userId, accountId}: {userId: string, accountId: string}) => {
   return (
     <header className="header">
       Search
       <div className="header-wrapper flex-center">
-        {/* <FileUploader /> */}
+        <FileUploader ownerId={userId} accountId={accountId} />
 
         <form
           action={async () => {
