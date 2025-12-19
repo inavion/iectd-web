@@ -1,8 +1,0 @@
-- [ ] Git add .
-- [ ] Git commit -m “message”
-- [ ] Git push origin feature-branch
-- [ ] Git checkout main
-- [ ] Git merge feature-branch
-- [ ] Git add .
-- [ ] Git commit -m “merge to feature-branch”
-- [ ] Git push origin main

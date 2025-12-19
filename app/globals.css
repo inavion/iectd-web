@@ -270,10 +270,10 @@
     @apply text-center text-light-100;
   }
   .delete-file-name {
-    @apply font-medium text-brand-100;
+    @apply font-medium text-brand;
   }
   .modal-cancel-button {
-    @apply h-[52px] flex-1 rounded-full bg-white text-light-100 hover:bg-transparent;
+    @apply h-[52px] flex-1 rounded-full bg-white text-light-100 hover:bg-transparent border-1 border-light-200 cursor-pointer;
   }
   .modal-submit-button {
     @apply !mx-0 h-[52px] w-full flex-1; /* primary-btn */

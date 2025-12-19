@@ -1,3 +1,4 @@
+import { Props } from "@/components/ActionsModalContent";
 import Card from "@/components/Card";
 import Sort from "@/components/Sort";
 import { getFiles } from "@/lib/actions/file.actions";
@@ -33,12 +34,7 @@ const Page = async ({ params }: SearchParamProps) => {
         <section className="file-list">
           {files.documents.map(
             (
-              file: Models.Document & {
-                name: string;
-                url: string;
-                type: string;
-                extension: string;
-                size: number;
+              file: Models.Document & Props & {
                 owner: Models.Document & { fullName: string };
               }
             ) => (
