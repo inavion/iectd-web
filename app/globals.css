@@ -93,6 +93,12 @@
 }
 
 @layer utilities {
+  /* Test */
+
+  .center {
+    @apply flex h-screen items-center justify-center;
+  }
+
   /* ===== TYPOGRAPHY */
   .h1 {
     @apply text-[34px] leading-[42px] font-bold;
@@ -258,16 +264,16 @@
 
   /* ActionsDropdown */
   .rename-input-field {
-    @apply h-[52px] w-full rounded-full border px-4 shadow-drop-1; /* body-2 shad-no-focus */
+    @apply h-[52px] w-full rounded-full border px-4 shadow-drop-1 border-light-200/40; /* body-2 shad-no-focus */
   }
   .delete-confirmation {
     @apply text-center text-light-100;
   }
   .delete-file-name {
-    @apply font-medium text-brand-100;
+    @apply font-medium text-brand;
   }
   .modal-cancel-button {
-    @apply h-[52px] flex-1 rounded-full bg-white text-light-100 hover:bg-transparent;
+    @apply h-[52px] flex-1 rounded-full bg-white text-light-100 hover:bg-transparent border-1 border-light-200/40 cursor-pointer;
   }
   .modal-submit-button {
     @apply !mx-0 h-[52px] w-full flex-1; /* primary-btn */
@@ -288,7 +294,7 @@
     @apply !mt-2 space-y-2;
   }
   .share-input-field {
-    @apply h-[52px] w-full rounded-full border px-4 shadow-drop-1; /* body-2 shad-no-focus */
+    @apply h-[52px] w-full rounded-full border px-4 shadow-drop-1 border-light-200/40; /* body-2 shad-no-focus */
   }
   .share-remove-user {
     @apply rounded-full bg-transparent text-light-100 shadow-none hover:bg-transparent;
@@ -376,7 +382,7 @@
     @apply flex h-[60px] justify-between px-5 sm:hidden;
   }
   .header-user {
-    @apply my-3 flex items-center gap-2 rounded-full p-1 text-light-100 sm:justify-center sm:bg-brand/10 lg:justify-start lg:p-3;
+    @apply my-3 flex items-center gap-2 rounded-full p-1 text-light-100 sm:justify-start sm:bg-brand/10 lg:justify-start lg:p-3;
   }
   .header-user-avatar {
     @apply aspect-square w-10 rounded-full object-cover;
@@ -404,7 +410,7 @@
     @apply relative w-full md:max-w-[480px];
   }
   .search-input-wrapper {
-    @apply flex h-[52px] flex-1 items-center gap-3 rounded-full px-4 shadow-drop-3;
+    @apply flex h-[52px] flex-1 items-center gap-3 rounded-full px-4 shadow-drop-3 border border-light-200/40;
   }
   .search-input {
     @apply w-full border-none p-0 shadow-none placeholder:text-light-200; /* body-2 body-1 shad-no-focus */
@@ -463,8 +469,8 @@
   /* Tailwind v4 automatically converts custom colors into CSS variables,
        which are then used to generate utility classes like 'bg-brand-100'. */
 
-  --color-brand-100: #8cc7ff;
-  --color-brand: #1a7fef;
+  --color-brand-100: #8cdeff;
+  --color-brand: #1aa4ef;
   --color-red: #ff7474;
   --color-error: #b80000;
   --color-green: #3dd9b3;
