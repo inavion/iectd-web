@@ -6,7 +6,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import Image from "next/image";
 
-export interface Props {
+export declare interface Props {
   type: string;
   extension: string;
   url: string;
