@@ -16,10 +16,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           />
 
           <div className="space-y-5 text-white">
-            <h1 className="h1">Manage your files using IECTD</h1>
-            <p className="body-1">
-              IECTD is a platform for storing documents.
-            </p>
+            <h1 className="h1">Manage your files using ieCTD</h1>
+            <p className="body-1">ieCTD is a platform for storing documents.</p>
           </div>
 
           <Image
