@@ -35,7 +35,11 @@ const Sidebar = ({ fullName, avatar, email }: Props) => {
           className="lg:hidden"
         />
       </Link>
+
+      
+
       <nav className="sidebar-nav h5">
+        
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {
             return (

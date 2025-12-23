@@ -199,23 +199,6 @@ export const getUsageSummary = (totalSpace: any) => {
       icon: "/assets/icons/file-image-light.svg",
       url: "/images",
     },
-    {
-      title: "Media",
-      size: totalSpace.video.size + totalSpace.audio.size,
-      latestDate:
-        totalSpace.video.latestDate > totalSpace.audio.latestDate
-          ? totalSpace.video.latestDate
-          : totalSpace.audio.latestDate,
-      icon: "/assets/icons/file-video-light.svg",
-      url: "/media",
-    },
-    {
-      title: "Others",
-      size: totalSpace.other.size,
-      latestDate: totalSpace.other.latestDate,
-      icon: "/assets/icons/file-other-light.svg",
-      url: "/others",
-    },
   ];
 };
 

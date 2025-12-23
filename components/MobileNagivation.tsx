@@ -18,7 +18,7 @@ import { Button } from "./ui/button";
 import FileUploader from "./FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
 
-interface Props {
+declare interface Props {
   $id: string;
   accountId: string;
   fullName: string;
