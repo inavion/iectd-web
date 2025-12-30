@@ -1,18 +1,21 @@
 import { Props } from "@/components/ActionsModalContent";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Card from "@/components/Card";
+import FolderCard from "@/components/FolderCard";
 import Sort from "@/components/Sort";
 import { getFiles } from "@/lib/actions/file.actions";
-import { getFileTypesParams } from "@/lib/utils";
+import { getFoldersByParent } from "@/lib/actions/folder.actions";
+import { convertFileSize, getFileTypesParams } from "@/lib/utils";
 import { Models } from "node-appwrite";
 
 const Page = async ({ searchParams, params }: SearchParamProps) => {
   const type = ((await params)?.type as string) || "";
   const searchText = ((await searchParams)?.query as string) || "";
   const sort = ((await searchParams)?.sort as string) || "";
-
   const types = getFileTypesParams(type) as FileType[];
 
   const files = await getFiles({ types, searchText, sort });
+  const folders = await getFoldersByParent({ parentFolderId: null });
 
   return (
     <div className="page-container">
@@ -22,8 +25,8 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
         <div className="total-size-section">
           <p className="body-1">
             Total:{" "}
-            <span className="h5">
-              0<span className="subtitle-2 text-light-100/80">/100 MB</span>
+            <span className="h4">
+              <span className="subtitle-2 !text-[17px] text-light-100/80">0 MB</span>
             </span>
           </p>
 
@@ -33,6 +36,14 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
             <Sort />
           </div>
         </div>
+      </section>
+
+      {/* folder creation section */}
+      <section className="file-list">
+        {folders.total > 0 &&
+          folders.documents.map((folder: any) => (
+            <FolderCard key={folder.$id} folder={folder} />
+          ))}
       </section>
 
       {files.total > 0 ? (

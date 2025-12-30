@@ -17,8 +17,9 @@ export const uploadFile = async ({
   file,
   ownerId,
   accountId,
+  folderId,
   path,
-}: UploadFileProps) => {
+}: UploadFileProps & { folderId: string | null; path: string }) => {
   const { storage, databases } = await createAdminClient();
 
   try {
@@ -40,6 +41,7 @@ export const uploadFile = async ({
       accountId,
       users: [],
       bucketFile: bucketFile.$id,
+      folderId,
     };
 
     const newFile = await databases
@@ -226,7 +228,7 @@ export async function getTotalSpaceUsed() {
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
-      [Query.equal("owner", [currentUser.$id])],
+      [Query.equal("owner", [currentUser.$id])]
     );
 
     const totalSpace = {
@@ -258,3 +260,36 @@ export async function getTotalSpaceUsed() {
   }
 }
 
+export const getFilesByFolder = async ({
+  folderId = null,
+}: {
+  folderId?: string | null;
+}) => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) throw new Error("Not authenticated");
+
+  const queries = [
+    Query.equal("accountId", currentUser.accountId),
+
+    folderId === null
+      ? Query.isNull("folderId") // ROOT FILES
+      : Query.equal("folderId", folderId), // FOLDER FILES
+
+    Query.or([
+      Query.equal("owner", [currentUser.$id]),
+      Query.contains("users", [currentUser.email]),
+    ]),
+
+    Query.orderDesc("$createdAt"),
+  ];
+
+  const files = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    "files",
+    queries
+  );
+
+  return parseStringify(files.documents);
+};

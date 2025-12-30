@@ -21,6 +21,9 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
   const path = usePathname();
   const [files, setFiles] = useState<File[]>([]);
 
+  const folderMatch = path.match(/^\/folders\/([^/]+)/);
+  const parentFolderId = folderMatch ? folderMatch[1] : null;
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setFiles(acceptedFiles);
@@ -43,22 +46,26 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
           });
         }
 
-        return uploadFile({ file, ownerId, accountId, path }).then(
-          (uploadedFile) => {
-            if (uploadedFile) {
-              setFiles((prevFiles) =>
-                prevFiles.filter((f) => f.name !== file.name)
-              );
-            }
+        return uploadFile({
+          file,
+          ownerId,
+          accountId,
+          path,
+          folderId: parentFolderId,
+        }).then((uploadedFile) => {
+          if (uploadedFile) {
+            setFiles((prevFiles) =>
+              prevFiles.filter((f) => f.name !== file.name)
+            );
           }
-        );
+        });
       });
 
       await Promise.all(uploadPromises);
     },
     [ownerId, accountId, path]
   );
-  const { getRootProps, getInputProps  } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   const handleRemoveFile = (
     e: React.MouseEvent<HTMLImageElement, MouseEvent>,

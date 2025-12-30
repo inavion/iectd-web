@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Dialog,
   DialogContent,
@@ -6,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,39 +15,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { actionsDropdownItems } from "@/constants";
-import { constructDownloadUrl } from "@/lib/utils";
 import Image from "next/image";
-import Link from "next/link";
 import { Models } from "node-appwrite";
 import { useState } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
-import {
-  deleteFileUsers,
-  renameFile,
-  updateFileUsers,
-} from "@/lib/actions/file.actions";
-import { FileDetails, ShareInput } from "./ActionsModalContent";
-import { Props } from "./ActionsModalContent";
 
-const ActionDropdown = ({
-  file,
-}: {
-  file: Models.Document &
-    Props & {
-      bucketFile: string;
-      owner: Models.Document & { fullName: string };
-      users: string[];
-    };
-}) => {
+import {
+  renameFolder,
+  deleteFolder,
+  updateFolderUsers,
+} from "@/lib/actions/folder.actions";
+import { FolderDetails, ShareInput } from "@/components/ActionsModalContent";
+import { folderDropdownItems } from "@/constants";
+
+type Folder = Models.Document & {
+  name: string;
+  users: string[];
+};
+
+const FolderDropdown = ({ folder }: { folder: Folder }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [action, setAction] = useState<ActionType | null>(null);
-  const [name, setName] = useState(file.name);
+
+  const [name, setName] = useState(folder.name);
+  const [emails, setEmails] = useState<string[]>(folder.users || []);
   const [isLoading, setIsLoading] = useState(false);
-  const [emails, setEmails] = useState<string[]>([]);
 
   const path = usePathname();
 
@@ -55,8 +50,8 @@ const ActionDropdown = ({
     setIsModalOpen(false);
     setIsDropdownOpen(false);
     setAction(null);
-    setName(file.name);
-    //setEmails([])
+    setName(folder.name);
+    setEmails(folder.users || []);
   };
 
   const handleAction = async () => {
@@ -66,22 +61,20 @@ const ActionDropdown = ({
 
     const actions = {
       rename: () =>
-        renameFile({
-          fileId: file.$id,
+        renameFolder({
+          folderId: folder.$id,
           name,
-          extension: file.extension,
           path,
         }),
       share: () =>
-        updateFileUsers({
-          fileId: file.$id,
+        updateFolderUsers({
+          folderId: folder.$id,
           emails,
           path,
         }),
       delete: () =>
-        deleteFileUsers({
-          fileId: file.$id,
-          bucketFileId: file.bucketFile,
+        deleteFolder({
+          folderId: folder.$id,
           path,
         }),
     };
@@ -94,19 +87,6 @@ const ActionDropdown = ({
     setIsLoading(false);
   };
 
-  const handleRemoveUser = async (email: string) => {
-    const updatedEmails = emails.filter((e) => e !== email);
-
-    const success = await updateFileUsers({
-      fileId: file.$id,
-      emails: updatedEmails,
-      path,
-    });
-
-    if (success) setEmails(updatedEmails);
-    closeAllModals();
-  };
-
   const renderDialogContent = () => {
     if (!action) return null;
 
@@ -117,6 +97,7 @@ const ActionDropdown = ({
           <DialogTitle className="text-center text-light-100">
             {label}
           </DialogTitle>
+
           {value === "rename" && (
             <Input
               type="text"
@@ -124,21 +105,27 @@ const ActionDropdown = ({
               onChange={(e) => setName(e.target.value)}
             />
           )}
-          {value === "details" && <FileDetails file={file} />}
+
+          {value === "details" && <FolderDetails folder={folder as any} />}
+
           {value === "share" && (
             <ShareInput
-              file={file}
+              file={folder as any}
               onInputChange={setEmails}
-              onRemove={handleRemoveUser}
+              onRemove={(email) =>
+                setEmails((prev) => prev.filter((e) => e !== email))
+              }
             />
           )}
-          {value === "delete" && (
-            <p className="delete-confirmation-text text-center">
-              Are you sure you want to delete{" "}
-              <span className="delete-file-name">{file.name}</span>?
-            </p>
-          )}
         </DialogHeader>
+
+        {value === "delete" && (
+          <p className="delete-confirmation-text text-center">
+            Are you sure you want to delete{" "}
+            <span className="delete-file-name">{folder.name}</span>?
+          </p>
+        )}
+
         {["rename", "share", "delete"].includes(value) && (
           <DialogFooter className="flex flex-col gap-3 md:flex-row text-white">
             <Button onClick={closeAllModals} className="modal-cancel-button">
@@ -177,59 +164,40 @@ const ActionDropdown = ({
             className="rotate-90 cursor-pointer"
           />
         </DropdownMenuTrigger>
+
         <DropdownMenuContent>
-          <DropdownMenuLabel className="max-w-[200px] truncate">
-            {file.name}
+          <DropdownMenuLabel className="truncate max-w-[200px]">
+            {folder.name}
           </DropdownMenuLabel>
+
           <DropdownMenuSeparator className="bg-light-200/20 my-2" />
-          {actionsDropdownItems.map((actionItem) => (
+
+          {folderDropdownItems.map((item) => (
             <DropdownMenuItem
-              key={actionItem.value}
+              key={item.value}
               className="active-option"
               onClick={() => {
-                setAction(actionItem);
-
-                if (
-                  ["rename", "share", "delete", "details"].includes(
-                    actionItem.value
-                  )
-                ) {
-                  setIsModalOpen(true);
-                }
+                setAction(item as ActionType);
+                setIsModalOpen(true);
               }}
             >
-              {actionItem.value === "download" ? (
-                <Link
-                  href={constructDownloadUrl(file.bucketFile)}
-                  download={file.name}
-                  className="flex items-center gap-2"
-                >
-                  <Image
-                    src={actionItem.icon}
-                    alt={actionItem.label}
-                    width={30}
-                    height={30}
-                  />
-                  {actionItem.label}
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={actionItem.icon}
-                    alt={actionItem.label}
-                    width={30}
-                    height={30}
-                  />
-                  {actionItem.label}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Image
+                  src={item.icon}
+                  alt={item.label}
+                  width={20}
+                  height={20}
+                />
+                {item.label}
+              </div>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
       {renderDialogContent()}
     </Dialog>
   );
 };
 
-export default ActionDropdown;
+export default FolderDropdown;

@@ -325,6 +325,10 @@
     @apply flex flex-col gap-2 text-light-100;
   }
 
+  .folder-card {
+    @apply flex justify-between cursor-pointer gap-6 rounded-[18px] bg-white py-3 px-5 shadow-sm transition-all hover:shadow-drop-3;
+  }
+
   /* Chart */
   .chart {
     @apply flex items-center rounded-[20px] bg-brand p-5 text-white md:flex-col xl:flex-row;
@@ -457,6 +461,22 @@
   }
   .thumbnail-image {
     @apply size-full object-cover object-center;
+  }
+
+  .create-new-button {
+    @apply flex gap-4 lg:w-[55%] lg:h-[80px] justify-center lg:justify-start items-center lg:rounded-[25px] bg-brand/10 text-brand shadow-drop-2 mb-6 h-[80px] sm:rounded-[15px] sm:h-[55px] sm:w-full;
+  }
+
+  .create-dropdown-menu {
+    @apply w-56 rounded-xl bg-white p-2 shadow-lg border border-light-200;
+  }
+
+  .active-option {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors duration-200 hover:bg-brand-100/20;
+  }
+
+  .shad-active-option {
+    @apply transition-colors duration-200 hover:bg-brand hover:text-white;
   }
 }
 

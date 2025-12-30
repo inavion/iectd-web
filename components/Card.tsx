@@ -36,7 +36,7 @@ const Card = ({
           date={file.$createdAt}
           className="body-2 text-light-100"
         />
-        <div className="flex justify-between items-enden items-end">
+        <div className="flex justify-between items-end">
           <p className="caption line-clamp-1 text-light-200">
             By: {file.owner.fullName}
           </p>

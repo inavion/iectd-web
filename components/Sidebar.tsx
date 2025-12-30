@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import CreateNew from "./CreateNew";
 
 interface Props {
   fullName: string;
@@ -12,8 +14,16 @@ interface Props {
   email: string;
 }
 
-const Sidebar = ({ fullName, avatar, email }: Props) => {
+const Sidebar = ({
+  fullName,
+  avatar,
+  email,
+  type,
+}: Props & { type: string }) => {
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const folderMatch = pathname.match(/^\/folders\/([^/]+)/);
+  const parentFolderId = folderMatch ? folderMatch[1] : null;
 
   return (
     <aside className="sidebar remove-scrollbar">
@@ -36,10 +46,10 @@ const Sidebar = ({ fullName, avatar, email }: Props) => {
         />
       </Link>
 
-      
-
       <nav className="sidebar-nav h5">
-        
+        {/* ✅ ONE GLOBAL CREATE BUTTON */}
+        <CreateNew currentPath={pathname} parentFolderId={parentFolderId} />
+
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {
             return (

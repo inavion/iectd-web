@@ -66,6 +66,32 @@ export const FileDetails = ({
   );
 };
 
+export const FolderDetails = ({
+  folder,
+}: {
+  folder: Models.Document & {
+    name: string;
+    owner: Models.Document & { fullName: string };
+  };
+}) => {
+  return (
+    <>
+      <div className="space-y-4 px-2 pt-2">
+        <DetailRow label="Name:" value={folder.name} />
+        <DetailRow label="Owner:" value={folder.owner.fullName} />
+        <DetailRow
+          label="Last edited:"
+          value={formatDateTime(folder.$updatedAt)}
+        />
+        <DetailRow
+          label="Created at:"
+          value={formatDateTime(folder.$createdAt)}
+        />
+      </div>
+    </>
+  );
+};
+
 export const ShareInput = ({
   file,
   onInputChange,
@@ -78,7 +104,7 @@ export const ShareInput = ({
 }) => {
   return (
     <>
-      <ImageThumbnail file={file} />
+      {file.bucketFile ? <ImageThumbnail file={file} /> : null}
       <div className="share-wrapper">
         <p className="subtitle-2 pl-1 text-light-100">Share file with others</p>
         <Input

@@ -44,6 +44,30 @@ export const actionsDropdownItems = [
   },
 ];
 
+export const folderDropdownItems = [
+  {
+    label: "Rename",
+    icon: "/assets/icons/edit.svg",
+    value: "rename",
+  },
+  {
+    label: "Details",
+    icon: "/assets/icons/info.svg",
+    value: "details",
+  },
+  {
+    label: "Share",
+    icon: "/assets/icons/share.svg",
+    value: "share",
+  },
+
+  {
+    label: "Delete",
+    icon: "/assets/icons/delete.svg",
+    value: "delete",
+  },
+];
+
 export const sortTypes = [
   {
     label: "Date created (newest)",
