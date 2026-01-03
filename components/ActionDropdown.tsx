@@ -177,11 +177,11 @@ const ActionDropdown = ({
             className="rotate-90 cursor-pointer"
           />
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent className="">
           <DropdownMenuLabel className="max-w-[200px] truncate">
             {file.name}
           </DropdownMenuLabel>
-          <DropdownMenuSeparator className="bg-light-200/20 my-2" />
+          <DropdownMenuSeparator className="bg-brand-100/50 my-2" />
           {actionsDropdownItems.map((actionItem) => (
             <DropdownMenuItem
               key={actionItem.value}

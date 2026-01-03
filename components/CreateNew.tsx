@@ -7,6 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -52,7 +55,7 @@ const CreateNew = ({
       {/* ===== Step C-2: + New Dropdown ===== */}
       <DropdownMenu>
         <div>
-          <DropdownMenuTrigger className="create-new-button h5 border-brand/20 border-1 shad-active-option lg:rounded-full">
+          <DropdownMenuTrigger className="create-new-button h5 shad-active-option lg:rounded-full">
             <div className="flex items-center justify-center ml-5">
               <span className="text-4xl mr-3 lg:items-center">+</span>
               <p className="lg:block hidden">New</p>
@@ -60,7 +63,7 @@ const CreateNew = ({
           </DropdownMenuTrigger>
         </div>
 
-        <div className="w-200">
+        <div className="w-200 ">
           <DropdownMenuContent
             align="start"
             sideOffset={8}
@@ -82,16 +85,22 @@ const CreateNew = ({
 
             <DropdownMenuSeparator className="my-1 bg-brand-100/50" />
 
-            <DropdownMenuItem className="active-option">
-              <Image
-                src="/assets/icons/upload.svg"
-                alt="upload"
-                width={18}
-                height={18}
-                className="invert"
-              />
-              File upload
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="active-option">
+                <Image
+                  src="/assets/icons/templates.png"
+                  alt="upload"
+                  width={18}
+                  height={18}
+                />
+                Templates
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="create-dropdown-menu !w-60">
+                <DropdownMenuItem className="active-option">
+                  Guidance for Industry M4Q
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </div>
       </DropdownMenu>

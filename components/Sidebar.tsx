@@ -12,6 +12,9 @@ interface Props {
   fullName: string;
   avatar: string;
   email: string;
+  type: string;
+  ownerId: string;
+  accountId: string;
 }
 
 const Sidebar = ({
@@ -19,7 +22,9 @@ const Sidebar = ({
   avatar,
   email,
   type,
-}: Props & { type: string }) => {
+  ownerId,
+  accountId,
+}: Props) => {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const folderMatch = pathname.match(/^\/folders\/([^/]+)/);
@@ -48,7 +53,7 @@ const Sidebar = ({
 
       <nav className="sidebar-nav h5">
         {/* ✅ ONE GLOBAL CREATE BUTTON */}
-        <CreateNew currentPath={pathname} parentFolderId={parentFolderId} />
+        <CreateNew currentPath={pathname} parentFolderId={parentFolderId}/>
 
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {

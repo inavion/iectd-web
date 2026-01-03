@@ -319,7 +319,7 @@
 
   /* Card */
   .file-card {
-    @apply flex cursor-pointer flex-col gap-6 rounded-[18px] bg-white p-5 shadow-sm transition-all hover:shadow-drop-3;
+    @apply flex cursor-pointer flex-col gap-6 rounded-[18px] bg-white p-5 shadow-sm transition-all hover:shadow-drop-3 border border-light-300;
   }
   .file-card-details {
     @apply flex flex-col gap-2 text-light-100;
@@ -464,11 +464,11 @@
   }
 
   .create-new-button {
-    @apply flex gap-4 lg:w-[55%] lg:h-[80px] justify-center lg:justify-start items-center lg:rounded-[25px] bg-brand/10 text-brand shadow-drop-2 mb-6 h-[80px] sm:rounded-[15px] sm:h-[55px] sm:w-full;
+    @apply flex gap-4 lg:w-[55%] lg:h-[80px] justify-center lg:justify-start items-center lg:rounded-[25px] bg-brand/10 text-brand shadow-drop-2 mb-6 h-[80px] sm:rounded-[15px] sm:h-[55px] sm:w-full border border-brand/20;
   }
 
   .create-dropdown-menu {
-    @apply w-56 rounded-xl bg-white p-2 shadow-lg border border-light-200;
+    @apply w-56 rounded-xl bg-white p-2 shadow-lg border border-brand/20;
   }
 
   .active-option {
