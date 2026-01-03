@@ -1,11 +1,18 @@
 import Image from "next/image";
 import FileUploader from "./FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
+import Search from "./Search";
 
-const Header = ({userId, accountId}: {userId: string, accountId: string}) => {
+const Header = ({
+  userId,
+  accountId,
+}: {
+  userId: string;
+  accountId: string;
+}) => {
   return (
     <header className="header">
-      Search
+      <Search />
       <div className="header-wrapper flex-center">
         <FileUploader ownerId={userId} accountId={accountId} />
 
