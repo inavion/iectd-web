@@ -12,14 +12,17 @@ const FolderCard = ({ folder }: { folder: any }) => {
       className="folder-card cursor-pointer"
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
     >
-      <div className="flex items-center">
+      <div className="flex items-center min-w-0">
         <Image
           src="/assets/icons/folder.png"
           alt="folder"
           width={34}
           height={34}
         />
-        <p className="ml-3 font-medium text-sm truncate">{folder.name}</p>
+
+        <p className="ml-3 font-medium text-sm truncate max-w-[220px]">
+          {folder.name}
+        </p>
       </div>
 
       <FolderDropdown folder={folder} />

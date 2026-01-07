@@ -94,11 +94,10 @@ const createQueries = (
 };
 
 export const getFiles = async ({
-  types = [],
   searchText = "",
   sort = "$createdAt-desc",
   limit,
-}: GetFilesProps) => {
+}: Omit<GetFilesProps, "types">) => {
   const { databases } = await createAdminClient();
 
   try {
@@ -106,7 +105,7 @@ export const getFiles = async ({
 
     if (!currentUser) throw new Error("User not found");
 
-    const queries = createQueries(currentUser, types, searchText, sort, limit);
+    const queries = createQueries(currentUser, [], searchText, sort, limit);
 
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
@@ -242,7 +241,7 @@ export async function getTotalSpaceUsed() {
     };
 
     files.documents.forEach((file) => {
-      const fileType = file.type as FileType;
+      const fileType = file.type as keyof typeof totalSpace & string;
       totalSpace[fileType].size += file.size;
       totalSpace.used += file.size;
 

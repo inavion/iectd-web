@@ -69,7 +69,7 @@ const Breadcrumbs = () => {
           const isLast = index === crumbs.length - 1;
 
           return (
-            <span key={crumb.id} className="flex items-center h1 capitalize">
+            <span key={crumb.id} className="flex items-centers subtitle-2">
               <Image
                 src="/assets/icons/right.png"
                 alt="chevron-right"

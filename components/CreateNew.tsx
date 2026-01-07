@@ -22,6 +22,7 @@ import {
 import { createFolder } from "@/lib/actions/folder.actions";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { createFDAGuidanceTemplate } from "@/lib/actions/folder.actions";
 
 const CreateNew = ({
   currentPath,
@@ -33,6 +34,17 @@ const CreateNew = ({
   const [open, setOpen] = useState(false);
   const [folderName, setFolderName] = useState("Untitled folder");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleCreateFDATemplate = async () => {
+    setIsLoading(true);
+
+    await createFDAGuidanceTemplate({
+      parentFolderId,
+      path: currentPath,
+    });
+
+    setIsLoading(false);
+  };
 
   const handleCreateFolder = async () => {
     if (!folderName.trim()) return;
@@ -96,7 +108,10 @@ const CreateNew = ({
                 Templates
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="create-dropdown-menu !w-60">
-                <DropdownMenuItem className="active-option">
+                <DropdownMenuItem
+                  onClick={handleCreateFDATemplate}
+                  className="active-option"
+                >
                   Guidance for Industry M4Q
                 </DropdownMenuItem>
               </DropdownMenuSubContent>

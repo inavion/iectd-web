@@ -6,6 +6,8 @@ import { appwriteConfig } from "../appwrite/config";
 import { getCurrentUser } from "./user.actions";
 import { parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
+import { FolderTemplateNode } from "@/templates/Guidance-for-Industry/fda-module2";
+import { FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE } from "@/templates/Guidance-for-Industry/fda-guidance-for-industry";
 
 const handleError = (error: unknown, message: string) => {
   console.error(error, message);
@@ -171,22 +173,14 @@ export const deleteFolder = async ({
   folderId: string;
   path: string;
 }) => {
-  const { databases } = await createAdminClient();
-
   try {
-    await databases.deleteDocument(
-      appwriteConfig.databaseId,
-      "folders",
-      folderId
-    );
-
+    await deleteFolderRecursively(folderId);
     revalidatePath(path);
     return parseStringify({ status: "success" });
   } catch (error) {
-    handleError(error, "Failed to delete folder");
+    handleError(error, "Failed to delete folder recursively");
   }
 };
-
 
 export const getFolderById = async (folderId: string) => {
   const { databases } = await createAdminClient();
@@ -200,4 +194,69 @@ export const getFolderById = async (folderId: string) => {
   } catch {
     return null;
   }
+};
+
+const createFolderTree = async ({
+  node,
+  parentFolderId,
+  path,
+}: {
+  node: FolderTemplateNode;
+  parentFolderId: string | null;
+  path: string;
+}) => {
+  // 1️⃣ Create THIS folder
+  const folder = await createFolder({
+    name: node.name,
+    parentFolderId,
+    path,
+  });
+
+  // 2️⃣ Create children under it
+  if (node.children?.length) {
+    for (const child of node.children) {
+      await createFolderTree({
+        node: child,
+        parentFolderId: folder.$id,
+        path,
+      });
+    }
+  }
+};
+
+export const createFDAGuidanceTemplate = async ({
+  parentFolderId,
+  path,
+}: {
+  parentFolderId: string | null;
+  path: string;
+}) => {
+  await createFolderTree({
+    node: FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE,
+    parentFolderId,
+    path,
+  });
+};
+
+const getChildFolders = async (parentFolderId: string) => {
+  const { databases } = await createAdminClient();
+
+  return databases.listDocuments(appwriteConfig.databaseId, "folders", [
+    Query.equal("parentFolderId", parentFolderId),
+  ]);
+};
+
+const deleteFolderRecursively = async (folderId: string) => {
+  const children = await getChildFolders(folderId);
+
+  for (const child of children.documents) {
+    await deleteFolderRecursively(child.$id);
+  }
+
+  const { databases } = await createAdminClient();
+  await databases.deleteDocument(
+    appwriteConfig.databaseId,
+    "folders",
+    folderId
+  );
 };

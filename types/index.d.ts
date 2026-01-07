@@ -1,7 +1,5 @@
 /* eslint-disable no-unused-vars */
 
-declare type FileType = "document" | "image" | "video" | "audio" | "other";
-
 declare interface ActionType {
   label: string;
   icon: string;
@@ -20,7 +18,6 @@ declare interface UploadFileProps {
   path: string;
 }
 declare interface GetFilesProps {
-  types: FileType[];
   searchText?: string;
   sort?: string;
   limit?: number;
