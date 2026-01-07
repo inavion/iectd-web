@@ -34,16 +34,21 @@ const CreateNew = ({
   const [open, setOpen] = useState(false);
   const [folderName, setFolderName] = useState("Untitled folder");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   const handleCreateFDATemplate = async () => {
-    setIsLoading(true);
+    if (isCreatingTemplate) return;
 
-    await createFDAGuidanceTemplate({
-      parentFolderId,
-      path: currentPath,
-    });
+    setIsCreatingTemplate(true);
 
-    setIsLoading(false);
+    try {
+      await createFDAGuidanceTemplate({
+        parentFolderId,
+        path: currentPath,
+      });
+    } finally {
+      setIsCreatingTemplate(false);
+    }
   };
 
   const handleCreateFolder = async () => {
@@ -107,12 +112,25 @@ const CreateNew = ({
                 />
                 Templates
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="create-dropdown-menu !w-60">
+              <DropdownMenuSubContent className="create-dropdown-menu !w-67">
                 <DropdownMenuItem
-                  onClick={handleCreateFDATemplate}
-                  className="active-option"
+                  onSelect={(e) => e.preventDefault()} // 👈 keeps dropdown open
+                  onClick={
+                    !isCreatingTemplate ? handleCreateFDATemplate : undefined
+                  }
+                  className="active-option flex items-center justify-between"
                 >
-                  Guidance for Industry M4Q
+                  <p className="!mr-0">Guidance for Industry M4Q</p>
+
+                  {isCreatingTemplate && (
+                    <Image
+                      src="/assets/icons/loader.svg"
+                      alt="loader"
+                      width={16}
+                      height={16}
+                      className="animate-spin ml-2 invert"
+                    />
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
