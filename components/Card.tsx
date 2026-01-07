@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Models } from "node-appwrite";
 import Thumbnail from "./Thumbnail";
 import { convertFileSize } from "@/lib/utils";
@@ -15,8 +17,17 @@ const Card = ({
       users: string[];
     };
 }) => {
+  const router = useRouter();
+
+  const handleDoubleClick = () => {
+    window.open(file.url, "_blank"); // external file URL
+  };
+
   return (
-    <Link href={file.url} target="_blank" className="file-card">
+    <div
+      className="file-card cursor-pointer"
+      onDoubleClick={handleDoubleClick}
+    >
       <div className="flex justify-between">
         <Thumbnail
           type={file.type}
@@ -32,10 +43,12 @@ const Card = ({
 
       <div className="file-card-details">
         <p className="subtitle-2 line-clamp-1">{file.name}</p>
+
         <FormattedDateTime
           date={file.$createdAt}
           className="body-2 text-light-100"
         />
+
         <div className="flex justify-between items-end">
           <p className="caption line-clamp-1 text-light-200">
             By: {file.owner.fullName}
@@ -45,7 +58,7 @@ const Card = ({
           </p>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

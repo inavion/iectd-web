@@ -69,17 +69,17 @@ const Breadcrumbs = () => {
           const isLast = index === crumbs.length - 1;
 
           return (
-            <span key={crumb.id} className="flex items-centers subtitle-2">
+            <span key={crumb.id} className="flex items-centers">
               <Image
                 src="/assets/icons/right.png"
                 alt="chevron-right"
-                width={16}
-                height={16}
+                width={24}
+                height={24}
                 className="mr-2"
               />
               {isLast ? (
-                <BreadcrumbItem className="font-bold">
-                  <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="subtitle-1 !font-bold">{crumb.name}</BreadcrumbPage>
                 </BreadcrumbItem>
               ) : (
                 <BreadcrumbItem>
