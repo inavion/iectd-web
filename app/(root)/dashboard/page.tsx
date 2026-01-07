@@ -3,18 +3,19 @@ import Link from "next/link";
 import { Models } from "node-appwrite";
 
 import ActionDropdown from "@/components/ActionDropdown";
-import { Chart } from "@/components/Chart";
+import { Props } from "@/components/ActionsModalContent";
+
 import FormattedDateTime from "@/components/FormattedDateTime";
 import Thumbnail from "@/components/Thumbnail";
 import { Separator } from "@/components/ui/separator";
 import { getFiles, getTotalSpaceUsed } from "@/lib/actions/file.actions";
 import { convertFileSize, getUsageSummary } from "@/lib/utils";
-import { Props } from "@/components/ActionsModalContent";
+import { Chart } from "@/components/Chart";
 
 const Dashboard = async () => {
   // Parallel requests
   const [files, totalSpace] = await Promise.all([
-    getFiles({ types: [], limit: 10 }),
+    getFiles({ limit: 10 }),
     getTotalSpaceUsed(),
   ]);
 
