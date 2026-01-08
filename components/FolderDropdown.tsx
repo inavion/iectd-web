@@ -128,12 +128,17 @@ const FolderDropdown = ({ folder }: { folder: Folder }) => {
 
         {["rename", "share", "delete"].includes(value) && (
           <DialogFooter className="flex flex-col gap-3 md:flex-row text-white">
-            <Button onClick={closeAllModals} className="modal-cancel-button">
+            <Button
+              onClick={closeAllModals}
+              className="modal-cancel-button"
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button
-              onClick={handleAction}
+              onClick={!isLoading ? handleAction : undefined}
               className="modal-submit-button primary-btn"
+              disabled={isLoading}
             >
               <p className="capitalize">{label}</p>
               {isLoading && (
@@ -153,7 +158,13 @@ const FolderDropdown = ({ folder }: { folder: Folder }) => {
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (isLoading) return;
+        setIsModalOpen(open);
+      }}
+    >
       <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
         <DropdownMenuTrigger className="shad-no-focus">
           <Image

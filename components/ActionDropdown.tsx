@@ -112,7 +112,15 @@ const ActionDropdown = ({
 
     const { label, value } = action;
     return (
-      <DialogContent className="shad-dialog button">
+      <DialogContent
+        className="shad-dialog button"
+        onInteractOutside={(e) => {
+          if (isLoading) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (isLoading) e.preventDefault();
+        }}
+      >
         <DialogHeader className="flex flex-col gap-3">
           <DialogTitle className="text-center text-light-100">
             {label}
@@ -141,7 +149,10 @@ const ActionDropdown = ({
         </DialogHeader>
         {["rename", "share", "delete"].includes(value) && (
           <DialogFooter className="flex flex-col gap-3 md:flex-row text-white">
-            <Button onClick={closeAllModals} className="modal-cancel-button">
+            <Button
+              onClick={closeAllModals}
+              className="modal-cancel-button !border-2"
+            >
               Cancel
             </Button>
             <Button
