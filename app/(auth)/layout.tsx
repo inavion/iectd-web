@@ -26,7 +26,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             width={400}
             height={400}
             className="transition-all hover:rotate-2 hover:scale-105"
-            unoptimized={false}
+            unoptimized={true}
           />
         </div>
       </section>

@@ -90,7 +90,7 @@ export const verifySecret = async ({
 
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
-    handleError;
+    handleError(error, "Failed to verify secret");
   }
 };
 

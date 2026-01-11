@@ -112,7 +112,7 @@ export const formatDateTime = (isoString: string | null | undefined) => {
 
 export const getFileIcon = (
   extension: string | undefined,
-  type: FileType | string
+  type: "document" | "image" | "video" | "audio" | "other"
 ) => {
   switch (extension) {
     // Document

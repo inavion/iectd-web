@@ -31,7 +31,7 @@ export const createFolder = async ({
 
     const folder = await databases.createDocument(
       appwriteConfig.databaseId,
-      "folders",
+      appwriteConfig.foldersCollectionId,
       ID.unique(),
       {
         name,
@@ -73,7 +73,7 @@ export const getFoldersByParent = async ({
 
     const folders = await databases.listDocuments(
       appwriteConfig.databaseId,
-      "folders",
+      appwriteConfig.foldersCollectionId,
       queries
     );
 
@@ -121,7 +121,7 @@ export const renameFolder = async ({
   try {
     const updatedFolder = await databases.updateDocument(
       appwriteConfig.databaseId,
-      "folders",
+      appwriteConfig.foldersCollectionId,
       folderId,
       { name }
     );
@@ -150,7 +150,7 @@ export const updateFolderUsers = async ({
   try {
     const updatedFolder = await databases.updateDocument(
       appwriteConfig.databaseId,
-      "folders",
+      appwriteConfig.foldersCollectionId,
       folderId,
       { users: emails }
     );
@@ -188,7 +188,7 @@ export const getFolderById = async (folderId: string) => {
   try {
     return await databases.getDocument(
       appwriteConfig.databaseId,
-      "folders",
+      appwriteConfig.foldersCollectionId,
       folderId
     );
   } catch {
@@ -241,9 +241,11 @@ export const createFDAGuidanceTemplate = async ({
 const getChildFolders = async (parentFolderId: string) => {
   const { databases } = await createAdminClient();
 
-  return databases.listDocuments(appwriteConfig.databaseId, "folders", [
-    Query.equal("parentFolderId", parentFolderId),
-  ]);
+  return databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [Query.equal("parentFolderId", parentFolderId)]
+  );
 };
 
 const deleteFolderRecursively = async (folderId: string) => {
@@ -256,7 +258,7 @@ const deleteFolderRecursively = async (folderId: string) => {
   const { databases } = await createAdminClient();
   await databases.deleteDocument(
     appwriteConfig.databaseId,
-    "folders",
+    appwriteConfig.foldersCollectionId,
     folderId
   );
 };
