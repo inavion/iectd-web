@@ -2,7 +2,7 @@ import { cn, getFileIcon } from "@/lib/utils";
 import Image from "next/image";
 
 interface Props {
-  type: string;
+  type: "document" | "image" | "video" | "audio" | "other";
   extension: string;
   url: string;
   imageClassName?: string;

@@ -80,7 +80,14 @@ const Search = () => {
                 >
                   <div className="flex cursor-pointer items-center gap-4">
                     <Thumbnail
-                      type={file.type}
+                      type={
+                        file.type as
+                          | "document"
+                          | "image"
+                          | "video"
+                          | "audio"
+                          | "other"
+                      }
                       extension={file.extension}
                       url={file.url}
                       className="size-9 min-w-9"

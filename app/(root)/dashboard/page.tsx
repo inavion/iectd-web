@@ -81,7 +81,7 @@ const Dashboard = async () => {
                   key={file.$id}
                 >
                   <Thumbnail
-                    type={file.type}
+                    type={file.type as "document" | "image" | "video" | "audio" | "other"}
                     extension={file.extension}
                     url={file.url}
                   />
