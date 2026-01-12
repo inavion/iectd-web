@@ -192,13 +192,6 @@ export const getUsageSummary = (totalSpace: any) => {
       icon: "/assets/icons/file-document-light.svg",
       url: "/documents",
     },
-    {
-      title: "Images",
-      size: totalSpace.image.size,
-      latestDate: totalSpace.image.latestDate,
-      icon: "/assets/icons/file-image-light.svg",
-      url: "/images",
-    },
   ];
 };
 
