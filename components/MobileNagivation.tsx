@@ -17,6 +17,7 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import FileUploader from "./FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
+import CreateNew from "./CreateNew";
 
 declare interface Props {
   $id: string;
@@ -35,6 +36,9 @@ const MobileNagivation = ({
 }: Props) => {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const folderMatch = pathname.match(/^\/folders\/([^/]+)/);
+  const parentFolderId = folderMatch ? folderMatch[1] : null;
 
   return (
     <header className="mobile-header">
@@ -74,6 +78,7 @@ const MobileNagivation = ({
           </SheetTitle>
 
           <nav className="mobile-nav h5">
+            <CreateNew currentPath={pathname} parentFolderId={parentFolderId} />
             <ul className="mobile-nav-list">
               {navItems.map(({ url, name, icon }) => {
                 return (
