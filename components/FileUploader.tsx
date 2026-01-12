@@ -105,7 +105,7 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
               >
                 <div className="flex item-center gap-3">
                   <Thumbnail
-                    type={type}
+                    type={type as "document" | "image" | "video" | "audio" | "other"}
                     extension={extension}
                     url={convertFileToUrl(file)}
                   />
