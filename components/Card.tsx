@@ -30,7 +30,7 @@ const Card = ({
     >
       <div className="flex justify-between">
         <Thumbnail
-          type={file.type}
+          type={file.type as "document" | "image" | "video" | "audio" | "other"}
           extension={file.extension}
           url={file.url}
           className="!size-20"

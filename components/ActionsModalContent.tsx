@@ -22,7 +22,7 @@ const ImageThumbnail = ({
     Props & { owner: Models.Document & { fullName: string } };
 }) => (
   <div className="file-details-thumbnail">
-    <Thumbnail type={file.type} extension={file.extension} url={file.url} />
+    <Thumbnail type={file.type as "document" | "image" | "video" | "audio" | "other"} extension={file.extension} url={file.url} />
     <div className="flex flex-col ">
       <p className="subtitle-2 mb-1">{file.name}</p>
       <FormattedDateTime
