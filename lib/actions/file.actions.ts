@@ -97,7 +97,7 @@ export const getFiles = async ({
   searchText = "",
   sort = "$createdAt-desc",
   limit,
-}: Omit<GetFilesProps, "types">) => {
+}: GetFilesProps) => {
   const { databases } = await createAdminClient();
 
   try {
@@ -241,7 +241,12 @@ export async function getTotalSpaceUsed() {
     };
 
     files.documents.forEach((file) => {
-      const fileType = file.type as keyof typeof totalSpace & string;
+      const fileType = file.type as
+        | "image"
+        | "document"
+        | "video"
+        | "audio"
+        | "other";
       totalSpace[fileType].size += file.size;
       totalSpace.used += file.size;
 

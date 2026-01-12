@@ -56,10 +56,13 @@ declare interface SidebarProps {
   fullName: string;
   avatar: string;
   email: string;
+  type: string;
+  ownerId: string;
+  accountId: string;
 }
 
 declare interface ThumbnailProps {
-  type: string;
+  type: "document" | "image" | "video" | "audio" | "other";
   extension: string;
   url: string;
   className?: string;
