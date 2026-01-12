@@ -26,18 +26,19 @@ const FolderCard = ({ folder }: { folder: any }) => {
           className="shrink-0"
         />
 
-        <p
-          className="
-            ml-3
-            font-medium
-            text-sm
-            leading-relaxed
-            break-words
-            max-w-[220px]
-          "
-        >
-          {folder.name}
-        </p>
+        {/* Text-only vertical centering */}
+        <div className="ml-3 flex items-center min-h-[34px]">
+          <p
+            className="
+              font-medium
+              text-sm
+              leading-tight
+              break-words
+            "
+          >
+            {folder.name}
+          </p>
+        </div>
       </div>
 
       <FolderDropdown folder={folder} />
