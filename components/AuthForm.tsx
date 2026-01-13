@@ -26,9 +26,7 @@ const authFormSchema = (formType: FormType) => {
   return z.object({
     email: z.string().email(),
     fullName:
-      formType === "sign-up"
-        ? z.string().min(2).max(50)
-        : z.string().optional(),
+      formType === "sign-up" ? z.string().min(2).max(5) : z.string().optional(),
   });
 };
 

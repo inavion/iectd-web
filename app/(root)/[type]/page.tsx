@@ -5,6 +5,7 @@ import Sort from "@/components/Sort";
 import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
 import { Models } from "node-appwrite";
+import { MAX_FILE_SIZE } from "@/constants";
 
 const Page = async ({ searchParams, params }: SearchParamProps) => {
   const searchText = ((await searchParams)?.query as string) || "";
@@ -12,6 +13,26 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
 
   const files = await getFilesByFolder({ folderId: null });
   const folders = await getFoldersByParent({ parentFolderId: null });
+
+  const formatBytesToMB = (bytes: number) => {
+    const mb = bytes / (1024 * 1024);
+    return mb < 1 ? mb.toFixed(2) : +mb.toFixed(2); // show 0.01, 1.12, 2, etc.
+  };
+
+  const totalUploadedBytes = files.documents.reduce(
+    (
+      acc: number,
+      file: Models.Document &
+        Props & {
+          owner: Models.Document & { fullName: string };
+          users: string[];
+        }
+    ) => acc + file.size,
+    0
+  );
+
+  const totalUploadedMB = formatBytesToMB(totalUploadedBytes);
+  const maxStorageMB = MAX_FILE_SIZE / (1024 * 1024); // just 5
 
   return (
     <div className="page-container">
@@ -21,13 +42,13 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
         <div className="total-size-section">
           <p className="body-1">
             Total:{" "}
-            <span className="h4">
-              <span className="subtitle-2 !text-[17px] text-light-100/80">0 MB</span>
+            <span className="h5">
+              {totalUploadedMB} / {maxStorageMB} MB
             </span>
           </p>
 
           <div className="sort-container">
-            <p className="body-1 hidden sm:block text-light-200">Sort by:</p>
+            <p className="body-1 hidden text-light-200 sm:block">Sort by:</p>
 
             <Sort />
           </div>

@@ -36,11 +36,11 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
             prevFiles.filter((f) => f.name !== file.name)
           );
 
-          return toast("File size exceeds the maximum allowed size of 50MB", {
+          return toast("File size exceeds the maximum allowed size of 5MB", {
             description: (
               <p className="body-2 text-white">
                 <span className="font-semibold">{file.name}</span> is too large.
-                Max size is 50MB.
+                Max size is 5MB.
               </p>
             ),
 
