@@ -265,9 +265,9 @@ export async function getTotalSpaceUsed() {
 }
 
 export const getFilesByFolder = async ({
-  folderId = null,
+  folderId,
 }: {
-  folderId?: string | null;
+  folderId: string | null;
 }) => {
   const { databases } = await createAdminClient();
   const currentUser = await getCurrentUser();
@@ -278,8 +278,8 @@ export const getFilesByFolder = async ({
     Query.equal("accountId", currentUser.accountId),
 
     folderId === null
-      ? Query.isNull("folderId") // ROOT FILES
-      : Query.equal("folderId", folderId), // FOLDER FILES
+      ? Query.isNull("folderId") // ROOT FILES ONLY
+      : Query.equal("folderId", folderId), // FOLDER FILES ONLY
 
     Query.or([
       Query.equal("owner", [currentUser.$id]),
@@ -291,9 +291,9 @@ export const getFilesByFolder = async ({
 
   const files = await databases.listDocuments(
     appwriteConfig.databaseId,
-    "files",
+    appwriteConfig.filesCollectionId,
     queries
   );
 
-  return parseStringify(files.documents);
+  return parseStringify(files);
 };

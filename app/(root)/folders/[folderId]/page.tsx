@@ -33,9 +33,9 @@ const FolderPage = async ({
       )}
 
       {/* FILES */}
-      {files.length > 0 ? (
+      {files.total > 0 ? (
         <section className="file-list">
-          {files.map((file: any) => (
+          {files.documents.map((file: any) => (
             <Card key={file.$id} file={file} />
           ))}
         </section>

@@ -1,18 +1,16 @@
 import { Props } from "@/components/ActionsModalContent";
-import Breadcrumbs from "@/components/Breadcrumbs";
 import Card from "@/components/Card";
 import FolderCard from "@/components/FolderCard";
 import Sort from "@/components/Sort";
-import { getFiles } from "@/lib/actions/file.actions";
+import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
-import { convertFileSize, getFileTypesParams } from "@/lib/utils";
 import { Models } from "node-appwrite";
 
 const Page = async ({ searchParams, params }: SearchParamProps) => {
   const searchText = ((await searchParams)?.query as string) || "";
   const sort = ((await searchParams)?.sort as string) || "";
 
-  const files = await getFiles({ searchText, sort });
+  const files = await getFilesByFolder({ folderId: null });
   const folders = await getFoldersByParent({ parentFolderId: null });
 
   return (

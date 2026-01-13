@@ -60,6 +60,7 @@ const Dashboard = async () => {
           ))}
         </ul>
       </section>
+      
 
       {/* Recent files uploaded */}
       <section className="dashboard-recent-files">
@@ -81,7 +82,14 @@ const Dashboard = async () => {
                   key={file.$id}
                 >
                   <Thumbnail
-                    type={file.type as "document" | "image" | "video" | "audio" | "other"}
+                    type={
+                      file.type as
+                        | "document"
+                        | "image"
+                        | "video"
+                        | "audio"
+                        | "other"
+                    }
                     extension={file.extension}
                     url={file.url}
                   />

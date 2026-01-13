@@ -10,6 +10,7 @@ import { uploadFile } from "@/lib/actions/file.actions";
 import { MAX_FILE_SIZE } from "@/constants";
 import { toast } from "sonner";
 import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 
 interface Props {
   ownerId: string;
@@ -21,8 +22,9 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
   const path = usePathname();
   const [files, setFiles] = useState<File[]>([]);
 
-  const folderMatch = path.match(/^\/folders\/([^/]+)/);
-  const parentFolderId = folderMatch ? folderMatch[1] : null;
+  const params = useParams();
+  const parentFolderId =
+    typeof params?.folderId === "string" ? params.folderId : null;
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -105,7 +107,9 @@ const FileUploader = ({ ownerId, accountId, className }: Props) => {
               >
                 <div className="flex item-center gap-3">
                   <Thumbnail
-                    type={type as "document" | "image" | "video" | "audio" | "other"}
+                    type={
+                      type as "document" | "image" | "video" | "audio" | "other"
+                    }
                     extension={extension}
                     url={convertFileToUrl(file)}
                   />
