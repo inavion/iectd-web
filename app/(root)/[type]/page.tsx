@@ -1,11 +1,11 @@
 import { Props } from "@/components/ActionsModalContent";
-import Card from "@/components/Card";
-import FolderCard from "@/components/FolderCard";
 import Sort from "@/components/Sort";
-import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
+import { getFilesByFolder } from "@/lib/actions/file.actions";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
 import { Models } from "node-appwrite";
 import { MAX_FILE_SIZE } from "@/constants";
+import FolderList from "@/components/ui/FolderList";
+import FileList from "@/components/FileList";
 
 const Page = async ({ searchParams, params }: SearchParamProps) => {
   const searchText = ((await searchParams)?.query as string) || "";
@@ -57,25 +57,12 @@ const Page = async ({ searchParams, params }: SearchParamProps) => {
 
       {/* folder creation section */}
       <section className="file-list">
-        {folders.total > 0 &&
-          folders.documents.map((folder: any) => (
-            <FolderCard key={folder.$id} folder={folder} />
-          ))}
+        <FolderList folders={folders.documents} />
       </section>
 
       {files.total > 0 ? (
         <section className="file-list">
-          {files.documents.map(
-            (
-              file: Models.Document &
-                Props & {
-                  owner: Models.Document & { fullName: string };
-                  users: string[];
-                }
-            ) => (
-              <Card key={file.$id} file={file} />
-            )
-          )}
+          <FileList files={files.documents} />
         </section>
       ) : (
         <p className="empty-list body-1">No files uploaded</p>

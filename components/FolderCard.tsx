@@ -4,18 +4,27 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import FolderDropdown from "./FolderDropdown";
 
-const FolderCard = ({ folder }: { folder: any }) => {
+interface FolderCardProps {
+  folder: any;
+  selected: boolean;
+  onSelect: (e: React.MouseEvent<HTMLDivElement>) => void;
+}
+
+const FolderCard = ({ folder, selected, onSelect }: FolderCardProps) => {
   const router = useRouter();
 
+  console.log(folder.name, selected);
   return (
     <div
-      className="
+      className={`
         folder-card
         cursor-pointer
         flex items-start justify-between
         px-4 py-3
-      "
+        ${selected ? "bg-brand-100/20" : "bg-white hover:bg-gray-100"}
+      `}
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
+      onClick={(e) => onSelect(e)}
     >
       <div className="flex items-start min-w-0">
         <Image
@@ -40,7 +49,6 @@ const FolderCard = ({ folder }: { folder: any }) => {
           </p>
         </div>
       </div>
-
       <FolderDropdown folder={folder} />
     </div>
   );

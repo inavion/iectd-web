@@ -319,14 +319,14 @@
 
   /* Card */
   .file-card {
-    @apply flex cursor-pointer flex-col gap-6 rounded-[18px] bg-white p-5 shadow-sm transition-all hover:shadow-drop-3 border border-light-300;
+    @apply flex cursor-pointer flex-col gap-6 rounded-[18px] p-5 shadow-sm transition-colors duration-200 select-none;
   }
   .file-card-details {
     @apply flex flex-col gap-2 text-light-100;
   }
 
   .folder-card {
-    @apply flex justify-between cursor-pointer gap-6 rounded-[18px] bg-white py-3 px-5 shadow-sm transition-all hover:shadow-drop-3;
+    @apply flex justify-between cursor-pointer gap-6 rounded-[18px] py-3 px-5 shadow-sm transition-colors duration-200 select-none;
   }
 
   /* Chart */
