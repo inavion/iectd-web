@@ -12,8 +12,6 @@ interface FolderCardProps {
 
 const FolderCard = ({ folder, selected, onSelect }: FolderCardProps) => {
   const router = useRouter();
-
-  console.log(folder.name, selected);
   return (
     <div
       className={`
