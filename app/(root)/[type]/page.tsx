@@ -43,7 +43,11 @@ const Page = async ({ searchParams }: SearchParamProps) => {
               {totalUploadedMB} / {maxStorageMB} MB
             </span>
           </p>
-          <Sort />
+          <div className="sort-container">
+            <p className="subtitle-2 text-gray-500">Sort by:</p>
+            <Sort />
+          </div>
+          
         </div>
       </section>
 
