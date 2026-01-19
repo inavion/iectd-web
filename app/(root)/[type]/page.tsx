@@ -9,6 +9,8 @@ import FileList from "@/components/FileList";
 import DragAndDrop from "@/components/DragAndDrop";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import { getCurrentUser } from "@/lib/actions/user.actions";
+import ListLayout from "@/components/ListLayout";
+import VersionToggle from "@/components/VersionToggle";
 
 const Page = async ({ searchParams }: SearchParamProps) => {
   const currentUser = await getCurrentUser();
@@ -16,6 +18,8 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   const files = await getFilesByFolder({ folderId: null });
   const folders = await getFoldersByParent({ parentFolderId: null });
+
+  const view = ((await searchParams)?.view as "list" | "grid") || "list";
 
   const formatBytesToMB = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -43,45 +47,72 @@ const Page = async ({ searchParams }: SearchParamProps) => {
               {totalUploadedMB} / {maxStorageMB} MB
             </span>
           </p>
+
           <div className="sort-container">
             <p className="subtitle-2 text-gray-500">Sort by:</p>
             <Sort />
+            <div className="card-options">
+              <VersionToggle />
+            </div>
           </div>
-          
         </div>
       </section>
 
-      {/* FOLDERS */}
-      <section className="file-list">
-        <FolderList folders={folders.documents} />
-      </section>
+      {/* CONTENT */}
+      {view === "list" ? (
+        <>
+          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+            <ListLayout folders={folders.documents} files={files.documents} />
 
-      {/* FILE AREA */}
-      <section className="relative mx-auto w-[1040px] min-h-[410px]">
-        {/* FILES */}
-        {files.total > 0 && (
-          <section className="file-list">
-            <FileList files={files.documents} />
+            {files.total === 0 && (
+              <DragAndDrop
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+                mode="empty"
+              />
+            )}
+
+            {files.total > 0 && (
+              <DragDropOverlay
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+              />
+            )}
           </section>
-        )}
+        </>
+      ) : (
+        <>
+          {/* GRID MODE */}
+          {folders.total > 0 && (
+            <section className="file-list">
+              <FolderList folders={folders.documents} />
+            </section>
+          )}
 
-        {/* EMPTY STATE DROPZONE */}
-        {files.total === 0 && (
-          <DragAndDrop
-            ownerId={currentUser.$id}
-            accountId={currentUser.accountId}
-            mode="empty"
-          />
-        )}
+          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+            {files.total > 0 && (
+              <section className="file-list">
+                <FileList files={files.documents} />
+              </section>
+            )}
 
-        {/* OVERLAY DROPZONE (FILES EXIST) */}
-        {files.total > 0 && (
-          <DragDropOverlay
-            ownerId={currentUser.$id}
-            accountId={currentUser.accountId}
-          />
-        )}
-      </section>
+            {files.total === 0 && (
+              <DragAndDrop
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+                mode="empty"
+              />
+            )}
+
+            {files.total > 0 && (
+              <DragDropOverlay
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+              />
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 };

@@ -318,6 +318,18 @@
   }
 
   /* Card */
+  .card {
+    @apply cursor-pointer bg-white gap-6 rounded-[18px] py-3 px-5 shadow-sm transition-colors duration-200 select-none;
+  }
+
+  .card-options {
+    @apply cursor-pointer bg-white rounded-[10px] w-20 h-9 shadow-sm transition-colors duration-200 select-none;
+  }
+
+  .option-divider {
+    @apply w-px h-[100%] border-r border-brand-100/20;
+  }
+
   .file-card {
     @apply flex cursor-pointer flex-col gap-6 rounded-[18px] p-5 shadow-sm transition-colors duration-200 select-none;
   }
@@ -477,6 +489,15 @@
 
   .shad-active-option {
     @apply transition-colors duration-200 hover:bg-brand hover:text-white;
+  }
+
+  /* ListLayout */
+
+  .header-divider {
+    @apply flex-1 border-1 border-brand/30;
+  }
+  .divider {
+    @apply flex-1 border-b border-brand/20;
   }
 }
 

@@ -13,11 +13,6 @@ export const navItems = [
 
 export const actionsDropdownItems = [
   {
-    label: "Rename",
-    icon: "/assets/icons/edit.svg",
-    value: "rename",
-  },
-  {
     label: "Details",
     icon: "/assets/icons/info.svg",
     value: "details",
@@ -40,11 +35,6 @@ export const actionsDropdownItems = [
 ];
 
 export const folderDropdownItems = [
-  {
-    label: "Rename",
-    icon: "/assets/icons/edit.svg",
-    value: "rename",
-  },
   {
     label: "Details",
     icon: "/assets/icons/info.svg",

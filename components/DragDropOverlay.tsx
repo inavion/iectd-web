@@ -118,10 +118,22 @@ export default function DragOverlay({ ownerId, accountId }: DragOverlayProps) {
     >
       <input {...getInputProps()} />
 
-      <p className="h4 mb-2">Drop files here</p>
-      <p className="body-2 text-light-200 mb-4">
-        Drag files here or use the “New” button
-      </p>
+      <div className=" animate-bounce m-5">
+        <Image
+          src="/assets/icons/upload2.png"
+          alt="upload"
+          width={60}
+          height={60}
+        />
+      </div>
+
+      <div className="flex flex-col select-none bg-brand text-center primary-btn py-5 px-10">
+        <p className="text-base font-medium text-white mb-1">Drop files here</p>
+
+        <p className="text-sm text-brand-100/80">
+          Or use the <span className="font-medium">New</span> button
+        </p>
+      </div>
 
       {files.length > 0 && (
         <ul className="uploader-preview-list w-full max-w-xl">
@@ -157,7 +169,11 @@ export default function DragOverlay({ ownerId, accountId }: DragOverlayProps) {
                     width={24}
                     height={24}
                     className="cursor-pointer text-red-500 font-bold mb-11 mr-1"
-                    onClick={(e) => setFiles((prev) => prev.filter((f) => f.name !== file.name))}
+                    onClick={(e) =>
+                      setFiles((prev) =>
+                        prev.filter((f) => f.name !== file.name)
+                      )
+                    }
                   />
                 </div>
               </li>
