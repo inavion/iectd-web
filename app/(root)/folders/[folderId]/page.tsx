@@ -41,7 +41,9 @@ const FolderPage = async ({
           <section className="relative mx-auto w-[1040px] min-h-[410px]">
             <ListLayout folders={folders.documents} files={files.documents} />
 
-            {folders.total === 0 && (
+
+
+            {files.total === 0 && folders.total === 0 && (
               <DragAndDrop
                 ownerId={currentUser.$id}
                 accountId={currentUser.accountId}
@@ -49,12 +51,11 @@ const FolderPage = async ({
               />
             )}
 
-            {folders.total > 0 && (
-              <DragDropOverlay
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-              />
-            )}
+            {/* Always render overlay — it will only appear on drag */}
+            <DragDropOverlay
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+            />
           </section>
         </>
       ) : (

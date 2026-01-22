@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { usePathname, useParams } from "next/navigation";
 import { getFileType, convertFileToUrl } from "@/lib/utils";
 import Thumbnail from "@/components/Thumbnail";
+import Image from "next/image";
 
 interface DragAndDropProps {
   ownerId: string;
@@ -93,11 +94,24 @@ export default function DragAndDrop({
       <input {...getInputProps()} />
 
       {mode === "empty" && (
-        <div className="text-center">
-          <p className="h4 mb-2">Drop files here</p>
-          <p className="body-2 text-light-200">
-            Drag files here or use the “New” button
-          </p>
+        <div className="flex flex-col items-center justify-center animate-bounce m-5">
+          <Image
+            src="/assets/icons/upload2.png"
+            alt="upload"
+            width={60}
+            height={50}
+            className="mb-4"
+          />
+
+          <div className="flex flex-col items-center text-center select-none bg-brand primary-btn py-5 px-10">
+            <p className="text-base font-medium text-white mb-1">
+              Drop files here
+            </p>
+
+            <p className="text-sm text-brand-100/80">
+              Or use the <span className="font-medium">New</span> button
+            </p>
+          </div>
         </div>
       )}
 

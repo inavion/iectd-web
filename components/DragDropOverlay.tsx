@@ -13,9 +13,14 @@ import Image from "next/image";
 interface DragOverlayProps {
   ownerId: string;
   accountId: string;
+  isDisabled?: boolean;
 }
 
-export default function DragOverlay({ ownerId, accountId }: DragOverlayProps) {
+export default function DragOverlay({
+  ownerId,
+  accountId,
+  isDisabled,
+}: DragOverlayProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
 
@@ -107,14 +112,12 @@ export default function DragOverlay({ ownerId, accountId }: DragOverlayProps) {
   return (
     <div
       {...getRootProps()}
-      className="
-    absolute inset-0 z-50
-    flex flex-col items-center justify-center
-    rounded-[20px]
-    border-2 border-dashed border-light-200 bg-brand-100/10
-    pointer-events-auto
-    p-6
-  "
+      className={`
+  absolute inset-0 z-50 flex flex-col items-center justify-center
+  rounded-[20px] border-2 border-dashed border-light-200
+  ${isVisible ? "bg-brand-100/10" : "bg-transparent"}
+  pointer-events-auto p-6
+`}
     >
       <input {...getInputProps()} />
 
@@ -123,7 +126,7 @@ export default function DragOverlay({ ownerId, accountId }: DragOverlayProps) {
           src="/assets/icons/upload2.png"
           alt="upload"
           width={60}
-          height={60}
+          height={50}
         />
       </div>
 
