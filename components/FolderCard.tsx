@@ -14,6 +14,7 @@ const FolderCard = ({ folder }: { folder: any }) => {
         cursor-pointer
         flex items-start justify-between
         px-4 py-3
+        bg-white hover:bg-gray-100
       "
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
     >

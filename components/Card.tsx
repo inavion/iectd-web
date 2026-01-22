@@ -25,7 +25,7 @@ const Card = ({
 
   return (
     <div
-      className="file-card cursor-pointer"
+      className="file-card cursor-pointer bg-white hover:bg-gray-100"
       onDoubleClick={handleDoubleClick}
     >
       <div className="flex justify-between">
