@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/actions/user.actions";
 import { MAX_FILE_SIZE } from "@/constants";
 import ListLayout from "@/components/ListLayout";
 import VersionToggle from "@/components/VersionToggle";
+import GridLayout from "@/components/GridLayout";
 
 const FolderPage = async ({
   params,
@@ -59,36 +60,22 @@ const FolderPage = async ({
           </section>
         </>
       ) : (
-        <>
-          {folders.total > 0 && (
-            <section className="file-list mb-6">
-              <FolderList folders={folders.documents} />
-            </section>
+        <section className="relative mx-auto w-[1040px] min-h-[410px]">
+          <GridLayout folders={folders.documents} files={files.documents} />
+
+          {files.total === 0 && folders.total === 0 && (
+            <DragAndDrop
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+              mode="empty"
+            />
           )}
 
-          <section className="relative mx-auto w-[1040px] min-h-[410px]">
-            {files.total > 0 && (
-              <section className="file-list">
-                <FileList files={files.documents} />
-              </section>
-            )}
-
-            {files.total === 0 && (
-              <DragAndDrop
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-                mode="empty"
-              />
-            )}
-
-            {files.total > 0 && (
-              <DragDropOverlay
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-              />
-            )}
-          </section>
-        </>
+          <DragDropOverlay
+            ownerId={currentUser.$id}
+            accountId={currentUser.accountId}
+          />
+        </section>
       )}
     </div>
   );

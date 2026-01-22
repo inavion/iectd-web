@@ -15,24 +15,38 @@ interface FileRowProps {
     };
   isSelected: boolean;
   onSelect: () => void;
+  setPendingDragItem: (item: any) => void;
+  setMouseDownPos: (pos: { x: number; y: number }) => void;
 }
 
-const FileRow = ({ file, isSelected, onSelect }: FileRowProps) => {
+const FileRow = ({
+  file,
+  isSelected,
+  onSelect,
+  setPendingDragItem,
+  setMouseDownPos,
+}: FileRowProps) => {
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect();
+      onMouseDown={(e) => {
+        e.stopPropagation(); // Prevent outside click deselect
+        if (!isSelected) onSelect(); // Select only if not already selected
+        setPendingDragItem({
+          id: file.$id,
+          type: "file",
+          name: file.name,
+          url: file.url,
+          extension: file.extension,
+          fileType: file.type,
+        });
+        setMouseDownPos({ x: e.clientX, y: e.clientY });
       }}
       onDoubleClick={() => window.open(file.url, "_blank")}
       className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
-        ${
-          isSelected
-            ? "bg-brand-100/20 hover:bg-brand-100/20"
-            : "hover:bg-gray-100"
-        }
+        transition-colors duration-150 ease-in-out
+        ${isSelected ? "bg-brand-100/20" : "hover:bg-gray-100"}
       `}
-    >
+    > 
       <div className="col-span-5 ml-2 flex items-center gap-2 min-w-0">
         <Thumbnail
           type={file.type as any}

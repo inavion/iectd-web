@@ -1,6 +1,6 @@
 "use client";
 
-import FolderRow from "@/components/list/FolderRow";
+import FolderCard from "@/components/FolderCard";
 
 interface DraggedItem {
   id: string;
@@ -11,7 +11,7 @@ interface DraggedItem {
   fileType?: string;
 }
 
-interface FolderRowListProps {
+interface FolderCardListProps {
   folders: any[];
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -22,7 +22,7 @@ interface FolderRowListProps {
   setHoveredFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-export default function FolderRowList({
+export default function FolderCardList({
   folders,
   selectedId,
   onSelect,
@@ -31,11 +31,11 @@ export default function FolderRowList({
   draggedItem,
   hoveredFolderId,
   setHoveredFolderId,
-}: FolderRowListProps) {
+}: FolderCardListProps) {
   return (
     <>
       {folders.map((folder) => (
-        <FolderRow
+        <FolderCard
           key={folder.$id}
           folder={folder}
           isSelected={selectedId === folder.$id}

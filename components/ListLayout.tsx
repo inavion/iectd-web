@@ -2,7 +2,8 @@
 
 import FolderRowList from "@/components/list/FolderRowList";
 import FileRowList from "@/components/list/FileRowList";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useDrag } from "@/components/DragContext";
 
 interface ListLayoutProps {
   folders: any[];
@@ -11,9 +12,29 @@ interface ListLayoutProps {
 
 const ListLayout = ({ folders, files }: ListLayoutProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    draggedItem,
+    setPendingDragItem,
+    setMouseDownPos,
+    hoveredFolderId,
+    setHoveredFolderId,
+  } = useDrag();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setSelectedId(null);
+      }
+    };
+
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
   return (
-    <div className="card w-full" onClick={() => setSelectedId(null)}>
+    <div className="card w-full" ref={containerRef}>
       {/* HEADER */}
       <div className="grid grid-cols-12 font-medium mb-2">
         <p className="col-span-5 ml-2">Name</p>
@@ -29,6 +50,11 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
           folders={folders}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          setPendingDragItem={setPendingDragItem}
+          setMouseDownPos={setMouseDownPos}
+          draggedItem={draggedItem}
+          hoveredFolderId={hoveredFolderId}
+          setHoveredFolderId={setHoveredFolderId}
         />
       )}
 
@@ -38,6 +64,8 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
           files={files}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          setPendingDragItem={setPendingDragItem}
+          setMouseDownPos={setMouseDownPos}
         />
       )}
     </div>
