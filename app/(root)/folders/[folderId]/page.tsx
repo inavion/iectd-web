@@ -1,51 +1,94 @@
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
 import { getFilesByFolder } from "@/lib/actions/file.actions";
-import FolderCard from "@/components/FolderCard";
-import Card from "@/components/Card";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FolderList from "@/components/ui/FolderList";
+import FileList from "@/components/FileList";
+import DragAndDrop from "@/components/DragAndDrop";
+import DragDropOverlay from "@/components/DragDropOverlay";
+import { getCurrentUser } from "@/lib/actions/user.actions";
+import { MAX_FILE_SIZE } from "@/constants";
+import ListLayout from "@/components/ListLayout";
+import VersionToggle from "@/components/VersionToggle";
 
 const FolderPage = async ({
   params,
+  searchParams,
 }: {
   params: Promise<{ folderId: string }>;
+  searchParams: Promise<{ view: "list" | "grid" }>;
 }) => {
   const { folderId } = await params;
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Not authenticated");
 
-  const folders = await getFoldersByParent({
-    parentFolderId: folderId,
-  });
+  const parentFolderId = folderId || null; // safe for Appwrite
 
-  const files = await getFilesByFolder({
-    folderId,
-  });
+  const folders = await getFoldersByParent({ parentFolderId });
+  const files = await getFilesByFolder({ folderId: parentFolderId });
+
+  const view = ((await searchParams)?.view as "list" | "grid") || "list";
 
   return (
     <div className="page-container">
-      <Breadcrumbs />
+      {/* Breadcrumbs */}
+      <div className="flex items-center justify-between w-full">
+        <Breadcrumbs />
+        <VersionToggle />
+      </div>
 
-      {/* SUBFOLDERS */}
-      {folders.total > 0 && (
-        <section className="file-list">
-          {folders.documents.map((folder: any) => (
-            <FolderCard key={folder.$id} folder={folder} />
-          ))}
-        </section>
-      )}
+      {view === "list" ? (
+        <>
+          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+            <ListLayout folders={folders.documents} files={files.documents} />
 
-      {/* FILES */}
-      {files.total > 0 ? (
-        <section className="file-list">
-          {files.documents.map((file: any) => (
-            <Card key={file.$id} file={file} />
-          ))}
-        </section>
+
+
+            {files.total === 0 && folders.total === 0 && (
+              <DragAndDrop
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+                mode="empty"
+              />
+            )}
+
+            {/* Always render overlay — it will only appear on drag */}
+            <DragDropOverlay
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+            />
+          </section>
+        </>
       ) : (
-        <section className="empty-state">
-          <p className="h4 text-center">Drop files here</p>
-          <p className="body-2 text-light-200 text-center">
-            or use the “New” button
-          </p>
-        </section>
+        <>
+          {folders.total > 0 && (
+            <section className="file-list mb-6">
+              <FolderList folders={folders.documents} />
+            </section>
+          )}
+
+          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+            {files.total > 0 && (
+              <section className="file-list">
+                <FileList files={files.documents} />
+              </section>
+            )}
+
+            {files.total === 0 && (
+              <DragAndDrop
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+                mode="empty"
+              />
+            )}
+
+            {files.total > 0 && (
+              <DragDropOverlay
+                ownerId={currentUser.$id}
+                accountId={currentUser.accountId}
+              />
+            )}
+          </section>
+        </>
       )}
     </div>
   );

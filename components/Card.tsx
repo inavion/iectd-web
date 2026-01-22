@@ -8,15 +8,14 @@ import FormattedDateTime from "./FormattedDateTime";
 import ActionDropdown from "./ActionDropdown";
 import { Props } from "./ActionsModalContent";
 
-const Card = ({
-  file,
-}: {
+interface CardProps {
   file: Models.Document &
-    Props & {
-      owner: Models.Document & { fullName: string };
-      users: string[];
-    };
-}) => {
+    Props & { owner: Models.Document & { fullName: string }; users: string[] };
+  selected?: boolean;
+  onSelect?: (e: React.MouseEvent<HTMLDivElement>) => void;
+}
+
+const Card = ({ file, selected, onSelect }: CardProps) => {
   const router = useRouter();
 
   const handleDoubleClick = () => {
@@ -25,8 +24,12 @@ const Card = ({
 
   return (
     <div
-      className="file-card cursor-pointer bg-white hover:bg-gray-100"
+
+      className={`file-card ${
+        selected ? "bg-brand-100/20" : "bg-white hover:bg-gray-100"
+      }`}
       onDoubleClick={handleDoubleClick}
+      onClick={(e) => onSelect?.(e)}
     >
       <div className="flex justify-between">
         <Thumbnail

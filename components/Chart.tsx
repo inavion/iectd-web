@@ -96,5 +96,6 @@ export const Chart = ({ used = 0 }: { used: number }) => {
         </CardDescription>
       </CardHeader>
     </Card>
+    
   );
 };
