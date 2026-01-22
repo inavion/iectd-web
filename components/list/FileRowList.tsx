@@ -10,13 +10,24 @@ interface FileRowListProps {
       owner: Models.Document & { fullName: string };
       users: string[];
     })[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }
 
-export default function FileRowList({ files }: FileRowListProps) {
+export default function FileRowList({
+  files,
+  selectedId,
+  onSelect,
+}: FileRowListProps) {
   return (
     <>
       {files.map((file) => (
-        <FileRow key={file.$id} file={file} />
+        <FileRow
+          key={file.$id}
+          file={file}
+          isSelected={selectedId === file.$id}
+          onSelect={() => onSelect(file.$id)}
+        />
       ))}
     </>
   );

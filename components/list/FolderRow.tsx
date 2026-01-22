@@ -5,15 +5,32 @@ import { useRouter } from "next/navigation";
 import FolderDropdown from "@/components/FolderDropdown";
 import FormattedDateTime from "@/components/FormattedDateTime";
 
-const FolderRow = ({ folder }: { folder: any }) => {
+const FolderRow = ({
+  folder,
+  isSelected,
+  onSelect,
+}: {
+  folder: any;
+  isSelected: boolean;
+  onSelect: () => void;
+}) => {
   const router = useRouter();
 
   return (
     <div
-      className="grid grid-cols-12 items-center pt-2 hover:bg-gray-100 cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect();
+      }}
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
+      className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
+        ${
+          isSelected
+            ? "bg-brand-100/20 hover:bg-brand-100/20"
+            : "hover:bg-gray-100"
+        }
+      `}
     >
-      {/* NAME */}
       <div className="col-span-5 ml-2 flex items-center gap-2 min-w-0 !mx-5">
         <Image
           src="/assets/icons/folder.png"
@@ -25,16 +42,13 @@ const FolderRow = ({ folder }: { folder: any }) => {
         <p className="truncate !ml-2">{folder.name}</p>
       </div>
 
-      {/* DATE */}
       <FormattedDateTime
         date={folder.$createdAt}
         className="col-span-4 body-2 text-light-100"
       />
 
-      {/* SIZE (folders have no size) */}
       <p className="col-span-2 text-light-200">—</p>
 
-      {/* ACTIONS */}
       <div className="ml-auto mr-2">
         <FolderDropdown folder={folder} />
       </div>

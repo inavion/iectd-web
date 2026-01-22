@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Thumbnail from "@/components/Thumbnail";
 import ActionDropdown from "@/components/ActionDropdown";
 import { convertFileSize } from "@/lib/utils";
@@ -14,20 +13,29 @@ interface FileRowProps {
       owner: Models.Document & { fullName: string };
       users: string[];
     };
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
-const FileRow = ({ file }: FileRowProps) => {
+const FileRow = ({ file, isSelected, onSelect }: FileRowProps) => {
   return (
-
-    <>
     <div
-      className="grid grid-cols-12 items-center pt-2  hover:bg-gray-100 cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect();
+      }}
       onDoubleClick={() => window.open(file.url, "_blank")}
+      className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
+        ${
+          isSelected
+            ? "bg-brand-100/20 hover:bg-brand-100/20"
+            : "hover:bg-gray-100"
+        }
+      `}
     >
-      {/* NAME */}
       <div className="col-span-5 ml-2 flex items-center gap-2 min-w-0">
         <Thumbnail
-          type={file.type as "document" | "image" | "video" | "audio" | "other"}
+          type={file.type as any}
           extension={file.extension}
           url={file.url}
           className="w-5 h-5"
@@ -35,25 +43,19 @@ const FileRow = ({ file }: FileRowProps) => {
         <p className="truncate">{file.name}</p>
       </div>
 
-      {/* DATE */}
       <FormattedDateTime
         date={file.$createdAt}
         className="col-span-4 body-2 text-light-100"
       />
 
-      {/* SIZE */}
-      <p className="col-span-2 text-light-200">
-        {convertFileSize(file.size)}
-      </p>
+      <p className="col-span-2 text-light-200">{convertFileSize(file.size)}</p>
 
-      {/* ACTIONS */}
       <div className="ml-auto mr-2">
         <ActionDropdown file={file} />
       </div>
 
       <div className="divider col-span-12 mt-2" />
     </div>
-    </>
   );
 };
 
