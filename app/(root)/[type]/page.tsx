@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Sort from "@/components/Sort";
 import { getFilesByFolder } from "@/lib/actions/file.actions";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
@@ -18,7 +19,11 @@ const Page = async ({ searchParams }: SearchParamProps) => {
   const files = await getFilesByFolder({ folderId: null });
   const folders = await getFoldersByParent({ parentFolderId: null });
 
-  const view = ((await searchParams)?.view as "list" | "grid") || "list";
+  // Get view from URL params first, then cookie, then default to "list"
+  const cookieStore = await cookies();
+  const savedView = cookieStore.get("viewMode")?.value as "list" | "grid" | undefined;
+  const urlView = (await searchParams)?.view as "list" | "grid" | undefined;
+  const view = urlView || savedView || "list";
 
   const formatBytesToMB = (bytes: number) => {
     const mb = bytes / (1024 * 1024);

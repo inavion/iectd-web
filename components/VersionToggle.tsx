@@ -13,6 +13,9 @@ const VersionToggle = () => {
   const view = (searchParams.get("view") as ViewMode) || "list";
 
   const setView = (mode: ViewMode) => {
+    // Save to cookie (expires in 1 year)
+    document.cookie = `viewMode=${mode}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", mode);
     router.push(`${pathname}?${params.toString()}`);
