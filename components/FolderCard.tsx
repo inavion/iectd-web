@@ -7,7 +7,7 @@ import FolderDropdown from "./FolderDropdown";
 interface FolderCardProps {
   folder: any;
   selected: boolean;
-  onSelect: () => void;
+  onSelect: (e?: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 const FolderCard = ({ folder, selected, onSelect }: FolderCardProps) => {
@@ -21,7 +21,7 @@ const FolderCard = ({ folder, selected, onSelect }: FolderCardProps) => {
       `}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect();
+        onSelect(e);
       }}
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
     >
