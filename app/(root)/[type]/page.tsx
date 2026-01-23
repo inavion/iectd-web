@@ -86,7 +86,7 @@ const Page = async ({ searchParams }: SearchParamProps) => {
       </section>
 
       {view === "list" ? (
-        <section className="relative mx-auto w-[1040px] min-h-[410px]">
+        <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
           <ListLayout folders={folders.documents} files={files.documents} />
 
           {files.total === 0 && folders.total === 0 && !searchId && (
@@ -103,7 +103,7 @@ const Page = async ({ searchParams }: SearchParamProps) => {
           />
         </section>
       ) : (
-        <section className="relative mx-auto w-[1040px] min-h-[410px]">
+        <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
           <GridLayout folders={folders.documents} files={files.documents} />
 
           {files.total === 0 && folders.total === 0 && !searchId && (

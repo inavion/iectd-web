@@ -28,7 +28,7 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
     <div ref={containerRef}>
       {/* FOLDERS */}
       {folders.length > 0 && (
-        <section className="file-list mb-6">
+        <section className="file-list mb-4 sm:mb-6 gap-3 sm:gap-6">
           {folders.map((folder) => (
             <FolderCard
               key={folder.$id}
@@ -42,7 +42,7 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
 
       {/* FILES */}
       {files.length > 0 && (
-        <section className="file-list">
+        <section className="file-list gap-3 sm:gap-6">
           {files.map((file) => (
             <Card
               key={file.$id}

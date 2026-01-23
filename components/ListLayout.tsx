@@ -16,10 +16,10 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
     <div className="card w-full" onClick={() => setSelectedId(null)}>
       {/* HEADER */}
       <div className="grid grid-cols-12 font-medium mb-2">
-        <p className="col-span-5 ml-2">Name</p>
-        <p className="col-span-4">Last interaction</p>
-        <p className="col-span-2">Size</p>
-      </div>
+      <p className="col-span-8 sm:col-span-5 ml-2">Name</p>
+      <p className="hidden sm:block col-span-4">Last interaction</p>
+      <p className="col-span-4 sm:col-span-2 text-right sm:text-left">Size</p>
+    </div>
 
       <div className="header-divider" />
 

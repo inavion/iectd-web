@@ -88,7 +88,7 @@ const Sidebar = ({
         alt="files"
         width={506}
         height={418}
-        className="w-full"
+        className="w-full hidden lg:block"
         unoptimized
       />
 

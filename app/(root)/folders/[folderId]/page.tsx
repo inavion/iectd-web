@@ -38,7 +38,7 @@ const FolderPage = async ({
 
       {view === "list" ? (
         <>
-          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+          <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
             <ListLayout folders={folders.documents} files={files.documents} />
 
 
@@ -61,14 +61,14 @@ const FolderPage = async ({
       ) : (
         <>
           {folders.total > 0 && (
-            <section className="file-list mb-6">
+            <section className="file-list mb-4 sm:mb-6 gap-3 sm:gap-6">
               <FolderList folders={folders.documents} />
             </section>
           )}
 
-          <section className="relative mx-auto w-[1040px] min-h-[410px]">
+          <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0"> 
             {files.total > 0 && (
-              <section className="file-list">
+              <section className="file-list gap-3 sm:gap-6">
                 <FileList files={files.documents} />
               </section>
             )}
