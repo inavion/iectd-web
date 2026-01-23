@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Models } from "node-appwrite";
 import Thumbnail from "./Thumbnail";
 import { convertFileSize } from "@/lib/utils";
@@ -12,24 +11,20 @@ interface CardProps {
   file: Models.Document &
     Props & { owner: Models.Document & { fullName: string }; users: string[] };
   selected?: boolean;
-  onSelect?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onSelect?: () => void;
 }
 
 const Card = ({ file, selected, onSelect }: CardProps) => {
-  const router = useRouter();
-
-  const handleDoubleClick = () => {
-    window.open(file.url, "_blank"); // external file URL
-  };
-
   return (
     <div
-
-      className={`file-card ${
+      className={`file-card cursor-pointer ${
         selected ? "bg-brand-100/20" : "bg-white hover:bg-gray-100"
       }`}
-      onDoubleClick={handleDoubleClick}
-      onClick={(e) => onSelect?.(e)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect?.();
+      }}
+      onDoubleClick={() => window.open(file.url, "_blank")}
     >
       <div className="flex justify-between">
         <Thumbnail
@@ -38,7 +33,6 @@ const Card = ({ file, selected, onSelect }: CardProps) => {
           url={file.url}
           className="!size-20"
         />
-
         <div className="flex flex-col items-end justify-between">
           <ActionDropdown file={file} />
         </div>
@@ -46,12 +40,7 @@ const Card = ({ file, selected, onSelect }: CardProps) => {
 
       <div className="file-card-details">
         <p className="subtitle-2 line-clamp-1">{file.name}</p>
-
-        <FormattedDateTime
-          date={file.$createdAt}
-          className="body-2 text-light-100"
-        />
-
+        <FormattedDateTime date={file.$createdAt} className="body-2 text-light-100" />
         <div className="flex justify-between items-end">
           <p className="caption line-clamp-1 text-light-200">
             By: {file.owner.fullName}

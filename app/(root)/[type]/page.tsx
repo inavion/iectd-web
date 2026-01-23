@@ -1,25 +1,48 @@
+import { cookies } from "next/headers";
 import { Props } from "@/components/ActionsModalContent";
 import Sort from "@/components/Sort";
-import { getFilesByFolder } from "@/lib/actions/file.actions";
-import { getFoldersByParent } from "@/lib/actions/folder.actions";
+import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
+import { getFoldersByParent, getFolderById } from "@/lib/actions/folder.actions";
 import { Models } from "node-appwrite";
 import { MAX_FILE_SIZE } from "@/constants";
-import FolderList from "@/components/ui/FolderList";
-import FileList from "@/components/FileList";
 import DragAndDrop from "@/components/DragAndDrop";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/ListLayout";
 import VersionToggle from "@/components/VersionToggle";
+import GridLayout from "@/components/GridLayout";
 
 const Page = async ({ searchParams }: SearchParamProps) => {
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("Not authenticated");
 
-  const files = await getFilesByFolder({ folderId: null });
-  const folders = await getFoldersByParent({ parentFolderId: null });
+  const params = await searchParams;
+  const searchId = params?.search as string | undefined;
+  const searchType = params?.type as "file" | "folder" | undefined;
 
-  const view = ((await searchParams)?.view as "list" | "grid") || "list";
+  // Get view from URL or cookie
+  const cookieStore = await cookies();
+  const savedView = cookieStore.get("viewMode")?.value as "list" | "grid" | undefined;
+  const view = (params?.view as "list" | "grid") || savedView || "list";
+
+  let folders: any = { documents: [], total: 0 };
+  let files: any = { documents: [], total: 0 };
+
+  if (searchId && searchType) {
+    // Filter to show only the searched item
+    if (searchType === "folder") {
+      const folder = await getFolderById(searchId);
+      folders = folder ? { documents: [folder], total: 1 } : { documents: [], total: 0 };
+    } else {
+      const allFiles = await getFiles({ limit: 100 });
+      const file = allFiles?.documents?.find((f: any) => f.$id === searchId);
+      files = file ? { documents: [file], total: 1 } : { documents: [], total: 0 };
+    }
+  } else {
+    // Normal load - get all root items
+    files = await getFilesByFolder({ folderId: null });
+    folders = await getFoldersByParent({ parentFolderId: null });
+  }
 
   const formatBytesToMB = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -27,7 +50,7 @@ const Page = async ({ searchParams }: SearchParamProps) => {
   };
 
   const totalUploadedBytes = files.documents.reduce(
-    (acc: number, file: Models.Document & Props) => acc + file.size,
+    (acc: number, file: Models.Document & Props) => acc + (file.size || 0),
     0
   );
 
@@ -36,16 +59,20 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   return (
     <div className="page-container">
-      {/* HEADER */}
       <section className="w-full">
-        <h1 className="h1 capitalize">Documents</h1>
+      <h1 className="h1 capitalize">
+          {searchId ? (
+            <a href="/documents" className="text-black">
+              ← Back to all
+            </a>
+          ) : (
+            "Documents"
+          )}
+        </h1>
 
         <div className="total-size-section">
           <p className="body-1">
-            Total:{" "}
-            <span className="h5">
-              {totalUploadedMB} / {maxStorageMB} MB
-            </span>
+            Total: <span className="h5">{totalUploadedMB} / {maxStorageMB} MB</span>
           </p>
 
           <div className="sort-container">
@@ -58,60 +85,40 @@ const Page = async ({ searchParams }: SearchParamProps) => {
         </div>
       </section>
 
-      {/* CONTENT */}
       {view === "list" ? (
-        <>
-          <section className="relative mx-auto w-[1040px] min-h-[410px]">
-            <ListLayout folders={folders.documents} files={files.documents} />
+        <section className="relative mx-auto w-[1040px] min-h-[410px]">
+          <ListLayout folders={folders.documents} files={files.documents} />
 
-            {files.total === 0 && (
-              <DragAndDrop
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-                mode="empty"
-              />
-            )}
-
-            {files.total > 0 && (
-              <DragDropOverlay
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-              />
-            )}
-          </section>
-        </>
-      ) : (
-        <>
-          {/* GRID MODE */}
-          {folders.total > 0 && (
-            <section className="file-list">
-              <FolderList folders={folders.documents} />
-            </section>
+          {files.total === 0 && folders.total === 0 && !searchId && (
+            <DragAndDrop
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+              mode="empty"
+            />
           )}
 
-          <section className="relative mx-auto w-[1040px] min-h-[410px]">
-            {files.total > 0 && (
-              <section className="file-list">
-                <FileList files={files.documents} />
-              </section>
-            )}
+          <DragDropOverlay
+            ownerId={currentUser.$id}
+            accountId={currentUser.accountId}
+          />
+        </section>
+      ) : (
+        <section className="relative mx-auto w-[1040px] min-h-[410px]">
+          <GridLayout folders={folders.documents} files={files.documents} />
 
-            {files.total === 0 && (
-              <DragAndDrop
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-                mode="empty"
-              />
-            )}
+          {files.total === 0 && folders.total === 0 && !searchId && (
+            <DragAndDrop
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+              mode="empty"
+            />
+          )}
 
-            {files.total > 0 && (
-              <DragDropOverlay
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-              />
-            )}
-          </section>
-        </>
+          <DragDropOverlay
+            ownerId={currentUser.$id}
+            accountId={currentUser.accountId}
+          />
+        </section>
       )}
     </div>
   );

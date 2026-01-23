@@ -262,3 +262,24 @@ const deleteFolderRecursively = async (folderId: string) => {
     folderId
   );
 };
+
+
+export const searchFolders = async ({ searchText }: { searchText: string }) => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  const queries = [
+    Query.equal("accountId", currentUser.accountId),
+    Query.contains("name", searchText),
+    Query.limit(10),
+  ];
+
+  const folders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    queries
+  );
+
+  return parseStringify(folders);
+};
