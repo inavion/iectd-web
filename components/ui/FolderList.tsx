@@ -36,8 +36,8 @@ export default function FolderList({ folders }: { folders: any[] }) {
           key={folder.$id}
           folder={folder}
           selected={selectedIds.includes(folder.$id)}
-          onSelect={(e: React.MouseEvent<HTMLDivElement>) =>
-            handleSelect(folder.$id, index, e.shiftKey)
+          onSelect={(e) =>
+            handleSelect(folder.$id, index, e?.shiftKey ?? false)
           }
         />
       ))}
