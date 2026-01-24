@@ -3,14 +3,14 @@ import { Props } from "@/components/ActionsModalContent";
 import Sort from "@/components/Sort";
 import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
 import { getFoldersByParent, getFolderById } from "@/lib/actions/folder.actions";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 import { Models } from "node-appwrite";
 import { MAX_FILE_SIZE } from "@/constants";
 import DragAndDrop from "@/components/DragAndDrop";
 import DragDropOverlay from "@/components/DragDropOverlay";
-import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/ListLayout";
-import VersionToggle from "@/components/VersionToggle";
 import GridLayout from "@/components/GridLayout";
+import VersionToggle from "@/components/VersionToggle";
 
 const Page = async ({ searchParams }: SearchParamProps) => {
   const currentUser = await getCurrentUser();

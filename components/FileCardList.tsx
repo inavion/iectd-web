@@ -1,10 +1,19 @@
 "use client";
 
-import FileRow from "@/components/list/FileRow";
+import Card from "@/components/Card";
 import { Models } from "node-appwrite";
 import { Props } from "@/components/ActionsModalContent";
 
-interface FileRowListProps {
+interface DraggedItem {
+  id: string;
+  type: "file" | "folder";
+  name: string;
+  url?: string;
+  extension?: string;
+  fileType?: string;
+}
+
+interface FileCardListProps {
   files: (Models.Document &
     Props & {
       owner: Models.Document & { fullName: string };
@@ -12,30 +21,21 @@ interface FileRowListProps {
     })[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  setPendingDragItem: React.Dispatch<
-  React.SetStateAction<{
-    id: string;
-    type: "file" | "folder";
-    name: string;
-    url?: string;
-    extension?: string;
-    fileType?: string;
-  } | null>
->;
+  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
   setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
 }
 
-export default function FileRowList({
+export default function FileCardList({
   files,
   selectedId,
   onSelect,
   setPendingDragItem,
   setMouseDownPos,
-}: FileRowListProps) {
+}: FileCardListProps) {
   return (
     <>
       {files.map((file) => (
-        <FileRow
+        <Card
           key={file.$id}
           file={file}
           isSelected={selectedId === file.$id}

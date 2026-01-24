@@ -7,24 +7,54 @@ import FormattedDateTime from "./FormattedDateTime";
 import ActionDropdown from "./ActionDropdown";
 import { Props } from "./ActionsModalContent";
 
+interface DraggedItem {
+  id: string;
+  type: "file" | "folder";
+  name: string;
+  url?: string;
+  extension?: string;
+  fileType?: string;
+}
+
 interface CardProps {
   file: Models.Document &
     Props & { owner: Models.Document & { fullName: string }; users: string[] };
-  selected?: boolean;
-  onSelect?: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
+  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
 }
 
-const Card = ({ file, selected, onSelect }: CardProps) => {
+const Card = ({
+  file,
+  isSelected,
+  onSelect,
+  setPendingDragItem,
+  setMouseDownPos,
+}: CardProps) => {
+  const handleDoubleClick = () => {
+    window.open(file.url, "_blank");
+  };
+
   return (
     <div
-      className={`file-card cursor-pointer ${
-        selected ? "bg-brand-100/20" : "bg-white hover:bg-gray-100"
+      className={`file-card cursor-pointer transition-colors duration-150 ${
+        isSelected ? "bg-brand-100/20" : "bg-white hover:bg-gray-100"
       }`}
-      onClick={(e) => {
+      onMouseDown={(e) => {
         e.stopPropagation();
-        onSelect?.();
+        if (!isSelected) onSelect();
+        setPendingDragItem({
+          id: file.$id,
+          type: "file",
+          name: file.name,
+          url: file.url,
+          extension: file.extension,
+          fileType: file.type,
+        });
+        setMouseDownPos({ x: e.clientX, y: e.clientY });
       }}
-      onDoubleClick={() => window.open(file.url, "_blank")}
+      onDoubleClick={handleDoubleClick}
     >
       <div className="flex justify-between">
         <Thumbnail

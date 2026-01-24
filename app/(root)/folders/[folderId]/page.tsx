@@ -1,13 +1,12 @@
+import { cookies } from "next/headers";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
 import { getFilesByFolder } from "@/lib/actions/file.actions";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import FolderList from "@/components/ui/FolderList";
-import FileList from "@/components/FileList";
 import DragAndDrop from "@/components/DragAndDrop";
 import DragDropOverlay from "@/components/DragDropOverlay";
 import { getCurrentUser } from "@/lib/actions/user.actions";
-import { MAX_FILE_SIZE } from "@/constants";
 import ListLayout from "@/components/ListLayout";
+import GridLayout from "@/components/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
 
 const FolderPage = async ({
@@ -21,12 +20,16 @@ const FolderPage = async ({
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("Not authenticated");
 
-  const parentFolderId = folderId || null; // safe for Appwrite
+  const parentFolderId = folderId || null;
 
   const folders = await getFoldersByParent({ parentFolderId });
   const files = await getFilesByFolder({ folderId: parentFolderId });
 
-  const view = ((await searchParams)?.view as "list" | "grid") || "list";
+  // Get view from URL params first, then cookie, then default to "list"
+  const cookieStore = await cookies();
+  const savedView = cookieStore.get("viewMode")?.value as "list" | "grid" | undefined;
+  const urlView = (await searchParams)?.view as "list" | "grid" | undefined;
+  const view = urlView || savedView || "list";
 
   return (
     <div className="page-container">
@@ -37,58 +40,39 @@ const FolderPage = async ({
       </div>
 
       {view === "list" ? (
-        <>
-          <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
-            <ListLayout folders={folders.documents} files={files.documents} />
+        <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
+          <ListLayout folders={folders.documents} files={files.documents} />
 
-
-
-            {files.total === 0 && folders.total === 0 && (
-              <DragAndDrop
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-                mode="empty"
-              />
-            )}
-
-            {/* Always render overlay — it will only appear on drag */}
-            <DragDropOverlay
+          {files.total === 0 && folders.total === 0 && (
+            <DragAndDrop
               ownerId={currentUser.$id}
               accountId={currentUser.accountId}
+              mode="empty"
             />
-          </section>
-        </>
-      ) : (
-        <>
-          {folders.total > 0 && (
-            <section className="file-list mb-4 sm:mb-6 gap-3 sm:gap-6">
-              <FolderList folders={folders.documents} />
-            </section>
           )}
 
-          <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0"> 
-            {files.total > 0 && (
-              <section className="file-list gap-3 sm:gap-6">
-                <FileList files={files.documents} />
-              </section>
-            )}
+          <DragDropOverlay
+            ownerId={currentUser.$id}
+            accountId={currentUser.accountId}
+          />
+        </section>
+      ) : (
+        <section className="relative w-full max-w-[1040px] mx-auto min-h-[410px] px-4 sm:px-0">
+          <GridLayout folders={folders.documents} files={files.documents} />
 
-            {files.total === 0 && (
-              <DragAndDrop
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-                mode="empty"
-              />
-            )}
+          {files.total === 0 && folders.total === 0 && (
+            <DragAndDrop
+              ownerId={currentUser.$id}
+              accountId={currentUser.accountId}
+              mode="empty"
+            />
+          )}
 
-            {files.total > 0 && (
-              <DragDropOverlay
-                ownerId={currentUser.$id}
-                accountId={currentUser.accountId}
-              />
-            )}
-          </section>
-        </>
+          <DragDropOverlay
+            ownerId={currentUser.$id}
+            accountId={currentUser.accountId}
+          />
+        </section>
       )}
     </div>
   );

@@ -297,3 +297,33 @@ export const getFilesByFolder = async ({
 
   return parseStringify(files);
 };
+
+
+/* ============================
+   MOVE FILE TO FOLDER
+============================ */
+export const moveFileToFolder = async ({
+  fileId,
+  targetFolderId,
+  path,
+}: {
+  fileId: string;
+  targetFolderId: string | null;
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+
+  try {
+    const updatedFile = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      fileId,
+      { folderId: targetFolderId }
+    );
+
+    revalidatePath(path);
+    return parseStringify(updatedFile);
+  } catch (error) {
+    handleError(error, "Failed to move file");
+  }
+};

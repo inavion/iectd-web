@@ -262,8 +262,9 @@ const deleteFolderRecursively = async (folderId: string) => {
   );
 };
 
-
-
+/* ============================
+   SEARCH FOLDERS
+============================ */
 export const searchFolders = async ({ searchText }: { searchText: string }) => {
   const { databases } = await createAdminClient();
   const currentUser = await getCurrentUser();
@@ -282,4 +283,73 @@ export const searchFolders = async ({ searchText }: { searchText: string }) => {
   );
 
   return parseStringify(folders);
+};
+
+/* ============================
+   MOVE FOLDER TO FOLDER
+============================ */
+export const moveFolderToFolder = async ({
+  folderId,
+  targetFolderId,
+  path,
+}: {
+  folderId: string;
+  targetFolderId: string | null;
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+
+  try {
+    // Prevent moving folder into itself
+    if (folderId === targetFolderId) {
+      throw new Error("Cannot move a folder into itself");
+    }
+
+    // Prevent circular reference: check if targetFolderId is a descendant of folderId
+    if (targetFolderId) {
+      const isDescendant = await isFolderDescendant(folderId, targetFolderId);
+      if (isDescendant) {
+        throw new Error("Cannot move a folder into its own subfolder");
+      }
+    }
+
+    const updatedFolder = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      folderId,
+      { parentFolderId: targetFolderId }
+    );
+
+    revalidatePath(path);
+    return parseStringify(updatedFolder);
+  } catch (error) {
+    handleError(error, "Failed to move folder");
+  }
+};
+
+/* ============================
+   HELPER: Check if targetId is a descendant of ancestorId
+============================ */
+const isFolderDescendant = async (
+  ancestorId: string,
+  targetId: string
+): Promise<boolean> => {
+  const { databases } = await createAdminClient();
+
+  let currentId: string | null = targetId;
+
+  while (currentId) {
+    if (currentId === ancestorId) return true;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const folderDoc: any = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      currentId
+    );
+
+    currentId = folderDoc.parentFolderId || null;
+  }
+
+  return false;
 };
