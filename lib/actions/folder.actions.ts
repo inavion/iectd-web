@@ -60,7 +60,6 @@ export const getFoldersByParent = async ({
     if (!currentUser) throw new Error("User not authenticated");
 
     const queries = [
-      Query.equal("accountId", currentUser.accountId),
       parentFolderId === null
         ? Query.isNull("parentFolderId")
         : Query.equal("parentFolderId", parentFolderId),
@@ -262,6 +261,7 @@ const deleteFolderRecursively = async (folderId: string) => {
     folderId
   );
 };
+
 
 
 export const searchFolders = async ({ searchText }: { searchText: string }) => {
