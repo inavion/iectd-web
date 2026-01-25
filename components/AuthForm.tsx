@@ -18,50 +18,85 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Link from "next/link";
 import { createAccount, signInUser } from "@/lib/actions/user.actions";
+import {
+  registerUser,
+  loginUser,
+} from "@/lib/actions/auth.actions";
 import OTPModal from "./OTPModal";
 
 type FormType = "sign-in" | "sign-up";
 
 const authFormSchema = (formType: FormType) => {
   return z.object({
-    email: z.string().email(),
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
     fullName:
-      formType === "sign-up" ? z.string().min(2).max(5) : z.string().optional(),
+      formType === "sign-up"
+        ? z.string().min(2, "Full name must be at least 2 characters")
+        : z.string().optional(),
   });
 };
 
 const AuthForm = ({ type }: { type: FormType }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [accountId, setAccountId] = useState(null);
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const [pendingPassword, setPendingPassword] = useState("");
 
   const formSchema = authFormSchema(type);
-  // 1. Define your form.
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: "",
       email: "",
+      password: "",
     },
   });
 
-  // 2. Define a submit handler.
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      const user =
-        type === "sign-up"
-          ? await createAccount({
-              fullName: values.fullName || " ",
-              email: values.email,
-            })
-          : await signInUser({ email: values.email });
+      // Store password for use after OTP verification
+      setPendingPassword(values.password);
 
-      setAccountId(user.accountId);
+      if (type === "sign-up") {
+        // 1. Register with new backend API (creates user with password)
+        try {
+          await registerUser({
+            email: values.email,
+            password: values.password,
+            fullName: values.fullName || "",
+          });
+        } catch (error) {
+          // If user already exists in new backend, continue with Appwrite
+          console.log("Backend registration:", error);
+        }
+
+        // 2. Create account with Appwrite (sends OTP)
+        const user = await createAccount({
+          fullName: values.fullName || "",
+          email: values.email,
+        });
+
+        setAccountId(user.accountId);
+      } else {
+        // Sign in flow
+        // 1. Sign in with Appwrite (sends OTP)
+        const user = await signInUser({ email: values.email });
+
+        if (user?.accountId) {
+          setAccountId(user.accountId);
+        } else {
+          setErrorMessage("User not found. Please sign up first.");
+        }
+      }
     } catch (error) {
-      setErrorMessage("Failed to create account");
+      const message =
+        error instanceof Error ? error.message : "Failed to authenticate";
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +109,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <h1 className="form-title h1">
             {type === "sign-in" ? "Sign In" : "Sign Up"}
           </h1>
+
           {type === "sign-up" && (
             <FormField
               control={form.control}
@@ -84,7 +120,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     <FormLabel className="shad-form-label body-2">
                       Full Name
                     </FormLabel>
-
                     <FormControl>
                       <Input
                         placeholder="Enter your full name"
@@ -109,10 +144,34 @@ const AuthForm = ({ type }: { type: FormType }) => {
                   <FormLabel className="shad-form-label body-2">
                     Email
                   </FormLabel>
-
                   <FormControl>
                     <Input
                       placeholder="Enter your email"
+                      type="email"
+                      {...field}
+                      className="shad-input body-2 shad-no-focus"
+                      autoFocus={type === "sign-in"}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage className="shad-form-message body-2" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="shad-form-item">
+                  <FormLabel className="shad-form-label body-2">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your password"
+                      type="password"
                       {...field}
                       className="shad-input body-2 shad-no-focus"
                     />
@@ -122,12 +181,13 @@ const AuthForm = ({ type }: { type: FormType }) => {
               </FormItem>
             )}
           />
+
           <Button
             type="submit"
             className="form-submit-button primary-btn text-white"
+            disabled={isLoading}
           >
             {type === "sign-in" ? "Sign In" : "Sign Up"}
-
             {isLoading && (
               <Image
                 src="/assets/icons/loader.svg"
@@ -158,10 +218,14 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </div>
         </form>
       </Form>
-      {/* OTP */}
 
+      {/* OTP Modal - also handles backend login after OTP verification */}
       {accountId && (
-        <OTPModal email={form.getValues("email")} accountId={accountId} />
+        <OTPModal
+          email={form.getValues("email")}
+          accountId={accountId}
+          password={pendingPassword}
+        />
       )}
     </>
   );

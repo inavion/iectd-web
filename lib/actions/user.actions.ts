@@ -116,8 +116,16 @@ export const getCurrentUser = async () => {
 export const signOutUser = async () => {
   const { account } = await createSessionClient();
   try {
+    // Sign out from Appwrite
     await account.deleteSession("current");
     (await cookies()).delete("appwrite-session");
+
+    // Also clear backend auth tokens
+    const cookieStore = await cookies();
+    cookieStore.delete("iectd-access-token");
+    cookieStore.delete("iectd-refresh-token");
+    cookieStore.delete("iectd-user-email");
+    cookieStore.delete("iectd-user-fullname");
   } catch (error) {
     handleError(error, "Failed to sign out user");
   } finally {
