@@ -19,18 +19,19 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
+import { loginUser } from "@/lib/actions/auth.actions";
 import { useRouter } from "next/navigation";
 
-const OTPModal = ({
-  accountId,
-  email,
-}: {
+interface OTPModalProps {
   accountId: string;
   email: string;
-}) => {
+  password: string; // Password for backend login after OTP verification
+}
+
+const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -38,9 +39,21 @@ const OTPModal = ({
     setIsLoading(true);
 
     try {
-      const sessionId = await verifySecret({ accountId, password });
+      // 1. Verify OTP with Appwrite
+      const sessionId = await verifySecret({ accountId, password: otp });
 
-      if (sessionId) router.push("/");
+      if (sessionId) {
+        // 2. Login with new backend API to get JWT tokens
+        try {
+          await loginUser({ email, password });
+        } catch (error) {
+          // If backend login fails, still continue since Appwrite auth succeeded
+          console.log("Backend login:", error);
+        }
+
+        // 3. Redirect to dashboard
+        router.push("/");
+      }
     } catch (error) {
       console.error("Failed to verify OTP", error);
     }
@@ -60,7 +73,7 @@ const OTPModal = ({
             Enter your OTP{" "}
             <Image
               src="/assets/icons/close-dark.svg"
-              alt="\"
+              alt="close"
               width={20}
               height={20}
               onClick={() => setIsOpen(false)}
@@ -68,17 +81,12 @@ const OTPModal = ({
             />
           </AlertDialogTitle>
           <AlertDialogDescription className="subtitle-2 text-center text-light-100">
-            We've sent a 6-digit code to{" "}
+            We&apos;ve sent a 6-digit code to{" "}
             <span className="pl-1 text-brand">{email}</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <InputOTP
-          maxLength={6}
-          value={password}
-          onChange={setPassword}
-          autoFocus
-        >
+        <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
           <InputOTPGroup className="shad-otp">
             <InputOTPSlot index={0} className="shad-otp-slot" />
             <InputOTPSlot index={1} className="shad-otp-slot" />
@@ -90,9 +98,9 @@ const OTPModal = ({
         </InputOTP>
 
         <AlertDialogFooter>
-          <div className="flex w-full flex-col  gap-4 ">
+          <div className="flex w-full flex-col gap-4">
             <AlertDialogAction
-              className="text-white shad-submit-btn h-12"
+              className="shad-submit-btn h-12 text-white"
               type="button"
               onClick={handleSubmit}
             >
@@ -109,7 +117,7 @@ const OTPModal = ({
             </AlertDialogAction>
 
             <div className="subtitle-2 mt-2 text-center text-light-100">
-              Didn't get a code?
+              Didn&apos;t get a code?
               <Button
                 type="button"
                 variant="link"

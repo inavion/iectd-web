@@ -9,6 +9,16 @@ export const navItems = [
     icon: "/assets/icons/documents.svg",
     url: "/documents",
   },
+  {
+    name: "AI Assistant",
+    icon: "/assets/icons/ai-assistant.svg",
+    url: "/ai-assistant",
+  },
+  {
+    name: "Settings",
+    icon: "/assets/icons/user.svg",
+    url: "/settings",
+  },
 ];
 
 export const actionsDropdownItems = [
