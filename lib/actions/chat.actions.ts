@@ -25,8 +25,7 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-const API_BASE_URL =
-  "http://production-iectd-alb-1715627367.us-east-1.elb.amazonaws.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_APPWRITE_API_BASE_URL;
 
 export const sendChatMessage = async (
   message: string
