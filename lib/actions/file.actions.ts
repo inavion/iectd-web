@@ -274,26 +274,45 @@ export const getFilesByFolder = async ({
 
   if (!currentUser) throw new Error("Not authenticated");
 
+  // Build base queries (owner/shared check + sorting)
   const queries = [
-    Query.equal("accountId", currentUser.accountId),
-
-    folderId === null
-      ? Query.isNull("folderId") // ROOT FILES ONLY
-      : Query.equal("folderId", folderId), // FOLDER FILES ONLY
-
     Query.or([
       Query.equal("owner", [currentUser.$id]),
       Query.contains("users", [currentUser.email]),
     ]),
-
     Query.orderDesc("$createdAt"),
   ];
+
+  // For specific folders, we can query directly
+  if (folderId !== null) {
+    queries.unshift(Query.equal("folderId", folderId));
+  }
 
   const files = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.filesCollectionId,
     queries
   );
+
+  // For root level (folderId === null), filter out files that are in EXISTING folders
+  if (folderId === null) {
+    // Get all existing folder IDs to check for orphaned files
+    const existingFolders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [Query.limit(1000)] // Get all folders
+    );
+    const existingFolderIds = new Set(existingFolders.documents.map((f) => f.$id));
+
+    // Root files = no folderId OR folderId points to deleted folder (orphaned)
+    const rootFiles = files.documents.filter((file) => {
+      if (!file.folderId) return true; // null/undefined = root
+      if (!existingFolderIds.has(file.folderId)) return true; // orphaned = treat as root
+      return false; // in a valid folder
+    });
+
+    return parseStringify({ ...files, documents: rootFiles, total: rootFiles.length });
+  }
 
   return parseStringify(files);
 };

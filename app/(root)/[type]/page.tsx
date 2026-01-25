@@ -11,6 +11,29 @@ import DragDropOverlay from "@/components/DragDropOverlay";
 import ListLayout from "@/components/ListLayout";
 import GridLayout from "@/components/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
+import Link from "next/link";
+import Image from "next/image";
+
+
+async function buildBreadcrumbPath(folderId: string | null): Promise<Array<{ id: string; name: string }>> {
+  const path: Array<{ id: string; name: string }> = [];
+  let currentFolderId = folderId;
+
+  while (currentFolderId) {
+    const folder = await getFolderById(currentFolderId);
+    if (!folder) break;
+
+    path.unshift({
+      id: folder.$id,
+      name: folder.name,
+    });
+
+    currentFolderId = folder.parentFolderId;
+  }
+
+  return path;
+}
+
 
 const Page = async ({ searchParams }: SearchParamProps) => {
   const currentUser = await getCurrentUser();
@@ -27,16 +50,25 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   let folders: any = { documents: [], total: 0 };
   let files: any = { documents: [], total: 0 };
+  let locationPath: Array<{ id: string; name: string }> = [];
 
   if (searchId && searchType) {
     // Filter to show only the searched item
     if (searchType === "folder") {
       const folder = await getFolderById(searchId);
       folders = folder ? { documents: [folder], total: 1 } : { documents: [], total: 0 };
+      // Build path from parent folder
+      if (folder?.parentFolderId) {
+        locationPath = await buildBreadcrumbPath(folder.parentFolderId);
+      }
     } else {
       const allFiles = await getFiles({ limit: 100 });
       const file = allFiles?.documents?.find((f: any) => f.$id === searchId);
       files = file ? { documents: [file], total: 1 } : { documents: [], total: 0 };
+      // Build path from file's folder
+      if (file?.folderId) {
+        locationPath = await buildBreadcrumbPath(file.folderId);
+      }
     }
   } else {
     // Normal load - get all root items
@@ -60,15 +92,44 @@ const Page = async ({ searchParams }: SearchParamProps) => {
   return (
     <div className="page-container">
       <section className="w-full">
-      <h1 className="h1 capitalize">
+        <div className="h1 capitalize flex items-center gap-2 flex-wrap">
           {searchId ? (
-            <a href="/documents" className="text-black">
-              ← Back to all
-            </a>
+            <>
+              <Link href="/documents" className="hover:underline ">
+                Documents
+              </Link>
+              {locationPath.map((crumb) => (
+                <span key={crumb.id} className="flex items-center gap-2 ">
+                  <Image
+                    src="/assets/icons/right.png"
+                    alt="chevron-right"
+                    width={20}
+                    height={20}
+                  />
+                  <Link
+                    href={`/folders/${crumb.id}`}
+                    className="hover:underline subtitle-1"
+                  >
+                    {crumb.name}
+                  </Link>
+                </span>
+              ))}
+              <Image
+                src="/assets/icons/right.png"
+                alt="chevron-right"
+                width={20}
+                height={20}
+              />
+              <span className="text-gray-500 subtitle-1">
+                {searchType === "folder"
+                  ? folders.documents[0]?.name
+                  : files.documents[0]?.name}
+              </span>
+            </>
           ) : (
             "Documents"
           )}
-        </h1>
+        </div>
 
         <div className="total-size-section">
           <p className="body-1">
