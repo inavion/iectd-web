@@ -210,7 +210,7 @@
 
   /* Root Layout */
   .main-content {
-    @apply h-full flex-1 overflow-auto bg-light-400 px-5 py-7 sm:mr-7 sm:rounded-[30px] md:mb-7 md:px-9 md:py-10; /* remove-scrollbar */
+    @apply h-full w-full flex-1 overflow-auto bg-light-400 px-3 py-5 sm:rounded-[30px] md:mb-5 md:px-5 md:py-7; /* remove-scrollbar */
   }
 
   /* Dashboard */
@@ -250,7 +250,10 @@
 
   /* Type page */
   .page-container {
-    @apply mx-auto flex w-full max-w-7xl flex-col items-center gap-8;
+    @apply flex w-full flex-col gap-8 py-2 md:px-8;
+  }
+  .page-container > * {
+    @apply w-full;
   }
   .total-size-section {
     @apply flex mt-2 flex-col justify-between sm:flex-row sm:items-center;
@@ -319,7 +322,7 @@
 
   /* Card */
   .card {
-    @apply cursor-pointer bg-white gap-6 rounded-[18px] py-3 px-5 shadow-sm transition-colors duration-200 select-none;
+    @apply bg-white w-full gap-6 rounded-[18px] py-3 px-5 shadow-sm transition-colors duration-200 select-none;
   }
 
   .card-options {
