@@ -285,3 +285,49 @@ export const signInAuthUser = async ({
     throw error;
   }
 };
+
+export interface ChangePasswordParams {
+  currentPassword: string;
+  newPassword: string;
+}
+
+// Change user password
+export const changePassword = async ({
+  currentPassword,
+  newPassword,
+}: ChangePasswordParams): Promise<{ success: boolean; message: string }> => {
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      throw new Error("Not authenticated. Please sign in again.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `Failed to change password: ${response.status}`
+      );
+    }
+
+    return parseStringify({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    handleError(error, "Failed to change password");
+    throw error;
+  }
+};
