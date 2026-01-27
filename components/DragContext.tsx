@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface DraggedItem {
+export interface DraggedItem {
   id: string;
   type: "file" | "folder";
   name: string;
@@ -12,10 +12,13 @@ interface DraggedItem {
 }
 
 interface DragContextType {
+  // Multiple dragged items support
+  draggedItems: DraggedItem[];
+  setDraggedItems: React.Dispatch<React.SetStateAction<DraggedItem[]>>;
+  pendingDragItems: DraggedItem[];
+  setPendingDragItems: React.Dispatch<React.SetStateAction<DraggedItem[]>>;
+  // Legacy single item (computed from first item for backwards compat)
   draggedItem: DraggedItem | null;
-  setDraggedItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
-  pendingDragItem: DraggedItem | null;
-  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
   mouseDownPos: { x: number; y: number } | null;
   setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
   cursorPos: { x: number; y: number };
@@ -28,33 +31,36 @@ const DragContext = createContext<DragContextType | null>(null);
 const DRAG_THRESHOLD = 5;
 
 export function DragProvider({ children }: { children: ReactNode }) {
-  const [draggedItem, setDraggedItem] = useState<DraggedItem | null>(null);
-  const [pendingDragItem, setPendingDragItem] = useState<DraggedItem | null>(null);
+  const [draggedItems, setDraggedItems] = useState<DraggedItem[]>([]);
+  const [pendingDragItems, setPendingDragItems] = useState<DraggedItem[]>([]);
   const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
 
+  // Computed property for backwards compatibility
+  const draggedItem = draggedItems.length > 0 ? draggedItems[0] : null;
+
   const handleMouseMove = (e: MouseEvent) => {
-    if (pendingDragItem && mouseDownPos) {
+    if (pendingDragItems.length > 0 && mouseDownPos) {
       const dx = Math.abs(e.clientX - mouseDownPos.x);
       const dy = Math.abs(e.clientY - mouseDownPos.y);
 
       if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
         setCursorPos({ x: e.clientX + 10, y: e.clientY + 10 });
-        setDraggedItem(pendingDragItem);
-        setPendingDragItem(null);
+        setDraggedItems(pendingDragItems);
+        setPendingDragItems([]);
       }
     }
 
-    if (draggedItem) {
+    if (draggedItems.length > 0) {
       setCursorPos({ x: e.clientX + 10, y: e.clientY + 10 });
     }
   };
 
   useEffect(() => {
     const handleMouseUp = () => {
-      setDraggedItem(null);
-      setPendingDragItem(null);
+      setDraggedItems([]);
+      setPendingDragItems([]);
       setMouseDownPos(null);
       setHoveredFolderId(null);
     };
@@ -66,15 +72,16 @@ export function DragProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draggedItem, pendingDragItem, mouseDownPos]);
+  }, [draggedItems, pendingDragItems, mouseDownPos]);
 
   return (
     <DragContext.Provider
       value={{
+        draggedItems,
+        setDraggedItems,
+        pendingDragItems,
+        setPendingDragItems,
         draggedItem,
-        setDraggedItem,
-        pendingDragItem,
-        setPendingDragItem,
         mouseDownPos,
         setMouseDownPos,
         cursorPos,

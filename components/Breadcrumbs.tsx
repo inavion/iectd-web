@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getFolderById } from "@/lib/actions/folder.actions";
-import { moveFileToFolder } from "@/lib/actions/file.actions";
-import { moveFolderToFolder } from "@/lib/actions/folder.actions";
+import { getFolderById, moveFolderToFolder, moveFoldersToFolder } from "@/lib/actions/folder.actions";
+import { moveFileToFolder, moveFilesToFolder } from "@/lib/actions/file.actions";
 import { useDrag } from "@/components/DragContext";
 import { toast } from "sonner";
 
@@ -28,7 +27,7 @@ const Breadcrumbs = () => {
   const [crumbs, setCrumbs] = useState<Crumb[]>([]);
   const [hoveredCrumbId, setHoveredCrumbId] = useState<string | null>(null);
 
-  const { draggedItem, setHoveredFolderId } = useDrag();
+  const { draggedItems, setHoveredFolderId } = useDrag();
 
   useEffect(() => {
     const buildCrumbs = async () => {
@@ -61,36 +60,65 @@ const Breadcrumbs = () => {
   }, [pathname]);
 
   const handleDrop = async (targetFolderId: string | null, targetName: string) => {
-    if (!draggedItem) return;
+    if (draggedItems.length === 0) return;
     
-    // Prevent dropping onto itself
-    if (draggedItem.id === targetFolderId) return;
+    // Filter out items that can't be dropped (the target folder itself)
+    const validItems = draggedItems.filter((item) => item.id !== targetFolderId);
+    if (validItems.length === 0) return;
 
     try {
-      if (draggedItem.type === "file") {
-        await moveFileToFolder({
-          fileId: draggedItem.id,
-          targetFolderId,
-          path: pathname,
-        });
-        toast.success(`Moved "${draggedItem.name}" to "${targetName}"`);
-      } else if (draggedItem.type === "folder") {
-        await moveFolderToFolder({
-          folderId: draggedItem.id,
-          targetFolderId,
-          path: pathname,
-        });
-        toast.success(`Moved "${draggedItem.name}" to "${targetName}"`);
+      const fileIds = validItems.filter((item) => item.type === "file").map((item) => item.id);
+      const folderIds = validItems.filter((item) => item.type === "folder").map((item) => item.id);
+
+      // Move files
+      if (fileIds.length > 0) {
+        if (fileIds.length === 1) {
+          await moveFileToFolder({
+            fileId: fileIds[0],
+            targetFolderId,
+            path: pathname,
+          });
+        } else {
+          await moveFilesToFolder({
+            fileIds,
+            targetFolderId,
+            path: pathname,
+          });
+        }
+      }
+
+      // Move folders
+      if (folderIds.length > 0) {
+        if (folderIds.length === 1) {
+          await moveFolderToFolder({
+            folderId: folderIds[0],
+            targetFolderId,
+            path: pathname,
+          });
+        } else {
+          await moveFoldersToFolder({
+            folderIds,
+            targetFolderId,
+            path: pathname,
+          });
+        }
+      }
+
+      const totalMoved = fileIds.length + folderIds.length;
+      if (totalMoved === 1) {
+        toast.success(`Moved "${validItems[0].name}" to "${targetName}"`);
+      } else {
+        toast.success(`Moved ${totalMoved} items to "${targetName}"`);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to move item");
+      toast.error(error.message || "Failed to move items");
     }
   };
 
   const canDrop = (targetId: string | null) => {
-    if (!draggedItem) return false;
-    if (draggedItem.id === targetId) return false;
-    return true;
+    if (draggedItems.length === 0) return false;
+    // Can drop if at least one item is not the target
+    return draggedItems.some((item) => item.id !== targetId);
   };
 
   return (
@@ -99,7 +127,7 @@ const Breadcrumbs = () => {
         {/* Root - Documents */}
         <BreadcrumbItem
           className={`h1 capitalize transition-colors duration-150 rounded px-2 py-1 ${
-            draggedItem && hoveredCrumbId === "root"
+            draggedItems.length > 0 && hoveredCrumbId === "root"
               ? "bg-blue-100 ring-2 ring-blue-400"
               : ""
           }`}
@@ -141,7 +169,7 @@ const Breadcrumbs = () => {
               ) : (
                 <BreadcrumbItem
                   className={`transition-colors duration-150 rounded px-2 py-1 ${
-                    draggedItem && isHovered
+                    draggedItems.length > 0 && isHovered
                       ? "bg-blue-100 ring-2 ring-blue-400"
                       : ""
                   }`}

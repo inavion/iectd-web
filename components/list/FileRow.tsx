@@ -14,33 +14,23 @@ interface FileRowProps {
       users: string[];
     };
   isSelected: boolean;
-  onSelect: () => void;
-  setPendingDragItem: (item: any) => void;
-  setMouseDownPos: (pos: { x: number; y: number }) => void;
+  onMouseDown: (e: React.MouseEvent) => void;
+  onMouseUp: (e: React.MouseEvent) => void;
 }
 
 const FileRow = ({
   file,
   isSelected,
-  onSelect,
-  setPendingDragItem,
-  setMouseDownPos,
+  onMouseDown,
+  onMouseUp,
 }: FileRowProps) => {
   return (
     <div
       onMouseDown={(e) => {
-        e.stopPropagation(); // Prevent outside click deselect
-        if (!isSelected) onSelect(); // Select only if not already selected
-        setPendingDragItem({
-          id: file.$id,
-          type: "file",
-          name: file.name,
-          url: file.url,
-          extension: file.extension,
-          fileType: file.type,
-        });
-        setMouseDownPos({ x: e.clientX, y: e.clientY });
+        e.stopPropagation();
+        onMouseDown(e);
       }}
+      onMouseUp={onMouseUp}
       onDoubleClick={() => window.open(file.url, "_blank")}
       className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
         transition-colors duration-150 ease-in-out

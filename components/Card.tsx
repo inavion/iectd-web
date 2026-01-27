@@ -7,30 +7,19 @@ import FormattedDateTime from "./FormattedDateTime";
 import ActionDropdown from "./ActionDropdown";
 import { Props } from "./ActionsModalContent";
 
-interface DraggedItem {
-  id: string;
-  type: "file" | "folder";
-  name: string;
-  url?: string;
-  extension?: string;
-  fileType?: string;
-}
-
 interface CardProps {
   file: Models.Document &
     Props & { owner: Models.Document & { fullName: string }; users: string[] };
   isSelected: boolean;
-  onSelect: () => void;
-  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
-  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
+  onMouseDown: (e: React.MouseEvent) => void;
+  onMouseUp: (e: React.MouseEvent) => void;
 }
 
 const Card = ({
   file,
   isSelected,
-  onSelect,
-  setPendingDragItem,
-  setMouseDownPos,
+  onMouseDown,
+  onMouseUp,
 }: CardProps) => {
   const handleDoubleClick = () => {
     window.open(file.url, "_blank");
@@ -43,17 +32,9 @@ const Card = ({
       }`}
       onMouseDown={(e) => {
         e.stopPropagation();
-        if (!isSelected) onSelect();
-        setPendingDragItem({
-          id: file.$id,
-          type: "file",
-          name: file.name,
-          url: file.url,
-          extension: file.extension,
-          fileType: file.type,
-        });
-        setMouseDownPos({ x: e.clientX, y: e.clientY });
+        onMouseDown(e);
       }}
+      onMouseUp={onMouseUp}
       onDoubleClick={handleDoubleClick}
     >
       <div className="flex justify-between">
