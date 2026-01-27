@@ -11,12 +11,12 @@ export const navItems = [
   },
   {
     name: "AI Assistant",
-    icon: "/assets/icons/ai-assistant.svg",
+    icon: "/assets/icons/ai-assistant.png",
     url: "/ai-assistant",
   },
   {
     name: "Settings",
-    icon: "/assets/icons/user.svg",
+    icon: "/assets/icons/user.png",
     url: "/settings",
   },
 ];

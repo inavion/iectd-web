@@ -83,14 +83,6 @@ const Sidebar = ({
         </ul>
       </nav>
 
-      <Image
-        src="/assets/images/files-2.png"
-        alt="files"
-        width={506}
-        height={418}
-        className="w-full hidden lg:block"
-        unoptimized
-      />
 
       <div className="sidebar-user-info">
         <Image
