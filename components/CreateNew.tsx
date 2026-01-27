@@ -23,6 +23,7 @@ import { createFolder } from "@/lib/actions/folder.actions";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { createFDAGuidanceTemplate } from "@/lib/actions/folder.actions";
+import { toast } from "sonner";
 
 const CreateNew = ({
   currentPath,
@@ -35,6 +36,9 @@ const CreateNew = ({
   const [folderName, setFolderName] = useState("Untitled folder");
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  
+  // Control dropdown open state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleCreateFDATemplate = async () => {
     if (isCreatingTemplate) return;
@@ -46,8 +50,13 @@ const CreateNew = ({
         parentFolderId,
         path: currentPath,
       });
+      toast.success("Template created successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create template");
     } finally {
       setIsCreatingTemplate(false);
+      // Close dropdown when done
+      setDropdownOpen(false);
     }
   };
 
@@ -70,7 +79,15 @@ const CreateNew = ({
   return (
     <>
       {/* ===== Step C-2: + New Dropdown ===== */}
-      <DropdownMenu>
+      <DropdownMenu 
+        open={dropdownOpen} 
+        onOpenChange={(open) => {
+          // Prevent closing if template is being created
+          if (isCreatingTemplate && !open) return;
+          setDropdownOpen(open);
+        }}
+        modal={false}
+      >
         <div>
           <DropdownMenuTrigger className="create-new-button h5 shad-active-option lg:rounded-full">
             <div className="flex items-center justify-center ml-5">
@@ -85,6 +102,12 @@ const CreateNew = ({
             align="start"
             sideOffset={8}
             className="create-dropdown-menu"
+            onInteractOutside={(e) => {
+              // Prevent closing when clicking outside while creating template
+              if (isCreatingTemplate) {
+                e.preventDefault();
+              }
+            }}
           >
             <DropdownMenuItem
               onClick={() => setOpen(true)}
@@ -178,6 +201,7 @@ const CreateNew = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </>
   );
 };
