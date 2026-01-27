@@ -4,33 +4,22 @@ import Card from "@/components/Card";
 import { Models } from "node-appwrite";
 import { Props } from "@/components/ActionsModalContent";
 
-interface DraggedItem {
-  id: string;
-  type: "file" | "folder";
-  name: string;
-  url?: string;
-  extension?: string;
-  fileType?: string;
-}
-
 interface FileCardListProps {
   files: (Models.Document &
     Props & {
       owner: Models.Document & { fullName: string };
       users: string[];
     })[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
-  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
+  selectedIds: Set<string>;
+  onItemMouseDown: (id: string, e: React.MouseEvent) => void;
+  onItemMouseUp: (id: string, e: React.MouseEvent) => void;
 }
 
 export default function FileCardList({
   files,
-  selectedId,
-  onSelect,
-  setPendingDragItem,
-  setMouseDownPos,
+  selectedIds,
+  onItemMouseDown,
+  onItemMouseUp,
 }: FileCardListProps) {
   return (
     <>
@@ -38,10 +27,9 @@ export default function FileCardList({
         <Card
           key={file.$id}
           file={file}
-          isSelected={selectedId === file.$id}
-          onSelect={() => onSelect(file.$id)}
-          setPendingDragItem={setPendingDragItem}
-          setMouseDownPos={setMouseDownPos}
+          isSelected={selectedIds.has(file.$id)}
+          onMouseDown={(e) => onItemMouseDown(file.$id, e)}
+          onMouseUp={(e) => onItemMouseUp(file.$id, e)}
         />
       ))}
     </>

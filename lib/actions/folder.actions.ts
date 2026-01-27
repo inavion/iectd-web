@@ -328,6 +328,54 @@ export const moveFolderToFolder = async ({
 };
 
 /* ============================
+   BULK MOVE FOLDERS TO FOLDER
+============================ */
+export const moveFoldersToFolder = async ({
+  folderIds,
+  targetFolderId,
+  path,
+}: {
+  folderIds: string[];
+  targetFolderId: string | null;
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+
+  try {
+    const results = [];
+
+    for (const folderId of folderIds) {
+      // Prevent moving folder into itself
+      if (folderId === targetFolderId) {
+        continue; // Skip this folder
+      }
+
+      // Prevent circular reference
+      if (targetFolderId) {
+        const isDescendant = await isFolderDescendant(folderId, targetFolderId);
+        if (isDescendant) {
+          continue; // Skip this folder
+        }
+      }
+
+      const updatedFolder = await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.foldersCollectionId,
+        folderId,
+        { parentFolderId: targetFolderId }
+      );
+
+      results.push(updatedFolder);
+    }
+
+    revalidatePath(path);
+    return parseStringify({ success: true, count: results.length });
+  } catch (error) {
+    handleError(error, "Failed to move folders");
+  }
+};
+
+/* ============================
    HELPER: Check if targetId is a descendant of ancestorId
 ============================ */
 const isFolderDescendant = async (

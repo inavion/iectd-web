@@ -10,27 +10,16 @@ interface FileRowListProps {
       owner: Models.Document & { fullName: string };
       users: string[];
     })[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  setPendingDragItem: React.Dispatch<
-  React.SetStateAction<{
-    id: string;
-    type: "file" | "folder";
-    name: string;
-    url?: string;
-    extension?: string;
-    fileType?: string;
-  } | null>
->;
-  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
+  selectedIds: Set<string>;
+  onItemMouseDown: (id: string, e: React.MouseEvent) => void;
+  onItemMouseUp: (id: string, e: React.MouseEvent) => void;
 }
 
 export default function FileRowList({
   files,
-  selectedId,
-  onSelect,
-  setPendingDragItem,
-  setMouseDownPos,
+  selectedIds,
+  onItemMouseDown,
+  onItemMouseUp,
 }: FileRowListProps) {
   return (
     <>
@@ -38,10 +27,9 @@ export default function FileRowList({
         <FileRow
           key={file.$id}
           file={file}
-          isSelected={selectedId === file.$id}
-          onSelect={() => onSelect(file.$id)}
-          setPendingDragItem={setPendingDragItem}
-          setMouseDownPos={setMouseDownPos}
+          isSelected={selectedIds.has(file.$id)}
+          onMouseDown={(e) => onItemMouseDown(file.$id, e)}
+          onMouseUp={(e) => onItemMouseUp(file.$id, e)}
         />
       ))}
     </>

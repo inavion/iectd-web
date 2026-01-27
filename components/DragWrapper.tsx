@@ -4,9 +4,12 @@ import { DragProvider, useDrag } from "@/components/DragContext";
 import Thumbnail from "@/components/Thumbnail";
 
 function DragGhost() {
-  const { draggedItem, cursorPos } = useDrag();
+  const { draggedItems, cursorPos } = useDrag();
 
-  if (!draggedItem) return null;
+  if (draggedItems.length === 0) return null;
+
+  const firstItem = draggedItems[0];
+  const count = draggedItems.length;
 
   return (
     <div
@@ -16,18 +19,30 @@ function DragGhost() {
         left: `${cursorPos.x}px`,
       }}
     >
-      {draggedItem.type === "file" && (
+      {firstItem.type === "file" && (
         <Thumbnail
-          type={draggedItem.fileType as any}
-          extension={draggedItem.extension || ""}
-          url={draggedItem.url || ""}
+          type={firstItem.fileType as any}
+          extension={firstItem.extension || ""}
+          url={firstItem.url || ""}
           className="w-5 h-5"
         />
       )}
-      {draggedItem.type === "folder" && (
+      {firstItem.type === "folder" && (
         <img src="/assets/icons/folder.png" className="w-5 h-5" alt="folder" />
       )}
-      <span className="truncate max-w-xs">{draggedItem.name}</span>
+      {count === 1 ? (
+        <span className="truncate max-w-xs">{firstItem.name}</span>
+      ) : (
+        <span className="truncate max-w-xs">
+          {firstItem.name}{" "}
+          <span className="text-gray-500">+{count - 1} more</span>
+        </span>
+      )}
+      {count > 1 && (
+        <span className="ml-1 bg-brand text-white text-xs font-medium px-1.5 py-0.5 rounded-full">
+          {count}
+        </span>
+      )}
     </div>
   );
 }

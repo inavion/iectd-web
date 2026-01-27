@@ -346,3 +346,36 @@ export const moveFileToFolder = async ({
     handleError(error, "Failed to move file");
   }
 };
+
+/* ============================
+   BULK MOVE FILES TO FOLDER
+============================ */
+export const moveFilesToFolder = async ({
+  fileIds,
+  targetFolderId,
+  path,
+}: {
+  fileIds: string[];
+  targetFolderId: string | null;
+  path: string;
+}) => {
+  const { databases } = await createAdminClient();
+
+  try {
+    const results = await Promise.all(
+      fileIds.map((fileId) =>
+        databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.filesCollectionId,
+          fileId,
+          { folderId: targetFolderId }
+        )
+      )
+    );
+
+    revalidatePath(path);
+    return parseStringify({ success: true, count: results.length });
+  } catch (error) {
+    handleError(error, "Failed to move files");
+  }
+};

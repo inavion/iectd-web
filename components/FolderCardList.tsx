@@ -1,34 +1,24 @@
 "use client";
 
 import FolderCard from "@/components/FolderCard";
-
-interface DraggedItem {
-  id: string;
-  type: "file" | "folder";
-  name: string;
-  url?: string;
-  extension?: string;
-  fileType?: string;
-}
+import { DraggedItem } from "@/components/DragContext";
 
 interface FolderCardListProps {
   folders: any[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  setPendingDragItem: React.Dispatch<React.SetStateAction<DraggedItem | null>>;
-  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
-  draggedItem: DraggedItem | null;
+  selectedIds: Set<string>;
+  onItemMouseDown: (id: string, e: React.MouseEvent) => void;
+  onItemMouseUp: (id: string, e: React.MouseEvent) => void;
+  draggedItems: DraggedItem[];
   hoveredFolderId: string | null;
   setHoveredFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export default function FolderCardList({
   folders,
-  selectedId,
-  onSelect,
-  setPendingDragItem,
-  setMouseDownPos,
-  draggedItem,
+  selectedIds,
+  onItemMouseDown,
+  onItemMouseUp,
+  draggedItems,
   hoveredFolderId,
   setHoveredFolderId,
 }: FolderCardListProps) {
@@ -38,11 +28,10 @@ export default function FolderCardList({
         <FolderCard
           key={folder.$id}
           folder={folder}
-          isSelected={selectedId === folder.$id}
-          onSelect={() => onSelect(folder.$id)}
-          setPendingDragItem={setPendingDragItem}
-          setMouseDownPos={setMouseDownPos}
-          draggedItem={draggedItem}
+          isSelected={selectedIds.has(folder.$id)}
+          onMouseDown={(e) => onItemMouseDown(folder.$id, e)}
+          onMouseUp={(e) => onItemMouseUp(folder.$id, e)}
+          draggedItems={draggedItems}
           isDropTarget={hoveredFolderId === folder.$id}
           setHoveredFolderId={setHoveredFolderId}
         />
