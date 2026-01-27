@@ -37,13 +37,14 @@ const CreateNew = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   
-  // Control dropdown open state
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Template creation modal state
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
 
   const handleCreateFDATemplate = async () => {
     if (isCreatingTemplate) return;
 
     setIsCreatingTemplate(true);
+    setTemplateModalOpen(true);
 
     try {
       await createFDAGuidanceTemplate({
@@ -55,8 +56,7 @@ const CreateNew = ({
       toast.error(error.message || "Failed to create template");
     } finally {
       setIsCreatingTemplate(false);
-      // Close dropdown when done
-      setDropdownOpen(false);
+      setTemplateModalOpen(false);
     }
   };
 
@@ -79,15 +79,7 @@ const CreateNew = ({
   return (
     <>
       {/* ===== Step C-2: + New Dropdown ===== */}
-      <DropdownMenu 
-        open={dropdownOpen} 
-        onOpenChange={(open) => {
-          // Prevent closing if template is being created
-          if (isCreatingTemplate && !open) return;
-          setDropdownOpen(open);
-        }}
-        modal={false}
-      >
+      <DropdownMenu>
         <div>
           <DropdownMenuTrigger className="create-new-button h5 shad-active-option lg:rounded-full">
             <div className="flex items-center justify-center ml-5">
@@ -102,12 +94,6 @@ const CreateNew = ({
             align="start"
             sideOffset={8}
             className="create-dropdown-menu"
-            onInteractOutside={(e) => {
-              // Prevent closing when clicking outside while creating template
-              if (isCreatingTemplate) {
-                e.preventDefault();
-              }
-            }}
           >
             <DropdownMenuItem
               onClick={() => setOpen(true)}
@@ -137,23 +123,11 @@ const CreateNew = ({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="create-dropdown-menu !w-67">
                 <DropdownMenuItem
-                  onSelect={(e) => e.preventDefault()} // 👈 keeps dropdown open
-                  onClick={
-                    !isCreatingTemplate ? handleCreateFDATemplate : undefined
-                  }
+                  onClick={handleCreateFDATemplate}
+                  disabled={isCreatingTemplate}
                   className="active-option flex items-center justify-between"
                 >
                   <p className="!mr-0">Guidance for Industry M4Q</p>
-
-                  {isCreatingTemplate && (
-                    <Image
-                      src="/assets/icons/loader.svg"
-                      alt="loader"
-                      width={16}
-                      height={16}
-                      className="animate-spin ml-2 invert"
-                    />
-                  )}
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
@@ -202,6 +176,37 @@ const CreateNew = ({
         </DialogContent>
       </Dialog>
 
+      {/* ===== Template Creation Modal (Blocking) ===== */}
+      <Dialog open={templateModalOpen}>
+        <DialogContent 
+          className="shad-dialog button"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          // Hide close button by not allowing close
+        >
+          <DialogHeader>
+            <DialogTitle className="text-center text-light-100">
+              Creating Template
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center justify-center py-6 gap-4">
+            <Image
+              src="/assets/icons/loader.svg"
+              alt="loader"
+              width={48}
+              height={48}
+              className="animate-spin  invert"
+            />
+            <p className="text-light-100 text-sm text-center">
+              Creating folder structure...
+            </p>
+            <p className="text-light-200 text-xs text-center">
+              Please wait, this may take a moment.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
