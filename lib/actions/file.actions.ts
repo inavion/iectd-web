@@ -7,10 +7,61 @@ import { ID, Models, Query } from "node-appwrite";
 import { constructFileUrl, getFileType, parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./user.actions";
+import { getAccessToken, getUserEmail } from "./auth.actions";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_APPWRITE_API_BASE_URL;
 
 const handleError = (error: unknown, message: string) => {
   console.error(error, message);
   throw error;
+};
+
+// Upload file to vector store for RAG
+const uploadToVectorStore = async ({
+  file,
+  vectorStoreName,
+  filePath,
+}: {
+  file: File;
+  vectorStoreName: string;
+  filePath: string;
+}): Promise<{ success: boolean }> => {
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      console.error("No access token available for vector store upload");
+      return { success: false };
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("vector_store_name", vectorStoreName);
+    formData.append("file_path", filePath);
+
+    const response = await fetch(`${API_BASE_URL}/upload-to-vector-store`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(
+        "Vector store upload failed:",
+        errorData.detail || response.status
+      );
+      return { success: false };
+    }
+
+    console.log("Successfully uploaded to vector store:", filePath);
+    return { success: true };
+  } catch (error) {
+    console.error("Error uploading to vector store:", error);
+    return { success: false };
+  }
 };
 
 export const uploadFile = async ({
@@ -57,11 +108,58 @@ export const uploadFile = async ({
         handleError(error, "Failed to create file document");
       });
 
+    // Upload to vector store for RAG (non-blocking)
+    const userEmail = await getUserEmail();
+    if (userEmail && newFile) {
+      // Build file path based on folder structure
+      let filePath = `/${bucketFile.name}`;
+      if (folderId) {
+        try {
+          // Get folder path
+          const folderPath = await getFolderPath(databases, folderId);
+          filePath = `${folderPath}/${bucketFile.name}`;
+        } catch (error) {
+          console.error("Error getting folder path:", error);
+        }
+      }
+
+      // Upload to vector store (don't await to not block the response)
+      uploadToVectorStore({
+        file,
+        vectorStoreName: userEmail,
+        filePath,
+      }).catch((error) => {
+        console.error("Vector store upload failed:", error);
+      });
+    }
+
     revalidatePath(path);
     return parseStringify(newFile);
   } catch (error) {
     handleError(error, "Failed to upload file");
   }
+};
+
+// Helper function to get folder path
+const getFolderPath = async (
+  databases: ReturnType<Awaited<ReturnType<typeof createAdminClient>>["databases"]["getDocument"]> extends Promise<infer T> ? { getDocument: (...args: Parameters<Awaited<ReturnType<typeof createAdminClient>>["databases"]["getDocument"]>) => Promise<T> } : never,
+  folderId: string
+): Promise<string> => {
+  const pathParts: string[] = [];
+  let currentFolderId: string | null = folderId;
+
+  while (currentFolderId) {
+    const folder = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      currentFolderId
+    ) as Models.Document & { name: string; parentId?: string | null };
+
+    pathParts.unshift(folder.name);
+    currentFolderId = folder.parentId || null;
+  }
+
+  return "/" + pathParts.join("/");
 };
 
 const createQueries = (
