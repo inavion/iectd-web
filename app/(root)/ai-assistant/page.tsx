@@ -20,7 +20,7 @@ const AIAssistantPage = async () => {
   const hasBackendAuth = !!accessToken;
 
   return (
-    <div className="flex h-[calc(100vh-40px)] w-full flex-col overflow-hidden rounded-[30px] bg-white md:h-[calc(100vh-60px)]">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-[30px] bg-white">
       {hasBackendAuth ? (
         <AIAssistant userEmail={userEmail} />
       ) : (
