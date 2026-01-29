@@ -63,8 +63,17 @@ const ChatMessage = ({
         return <br key={lineIndex} />;
       }
 
+      // Check if it's a list item (starts with - or •)
+      const listItemMatch = line.match(/^\s*[-•]\s*/);
+      const isListItem = listItemMatch !== null;
+
+      // Remove the dash/bullet prefix for list items
+      const lineContent = isListItem
+        ? line.slice(listItemMatch[0].length)
+        : line;
+
       // Parse bold text (**text**)
-      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      const parts = lineContent.split(/(\*\*[^*]+\*\*)/g);
       const renderedParts = parts.map((part, partIndex) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
@@ -76,8 +85,8 @@ const ChatMessage = ({
         return part;
       });
 
-      // Check if it's a list item
-      if (line.trim().startsWith("-")) {
+      // Render as list item
+      if (isListItem) {
         return (
           <li key={lineIndex} className="ml-4 list-disc">
             {renderedParts}
