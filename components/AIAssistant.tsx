@@ -117,6 +117,18 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
         );
       };
 
+      const mergeAnnotations = (
+        incoming: ChatMessageType["annotations"]
+      ): ChatMessageType["annotations"] => {
+        if (!incoming || incoming.length === 0) return [];
+        const unique = new Map<string, (typeof incoming)[number]>();
+        incoming.forEach((annotation) => {
+          const key = `${annotation.file_id}-${annotation.index}`;
+          if (!unique.has(key)) unique.set(key, annotation);
+        });
+        return Array.from(unique.values());
+      };
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -147,6 +159,13 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
 
             if (payload.event === "text_delta") {
               appendDelta(payload.delta ?? "");
+            }
+
+            if (payload.annotations && payload.annotations.length > 0) {
+              const merged = mergeAnnotations(payload.annotations);
+              if (merged.length > 0) {
+                finalizeMessage(undefined, merged);
+              }
             }
 
             if (payload.event === "done") {
