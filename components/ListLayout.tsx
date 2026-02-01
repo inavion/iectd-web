@@ -4,6 +4,7 @@ import FolderRowList from "@/components/list/FolderRowList";
 import FileRowList from "@/components/list/FileRowList";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useDrag, DraggedItem } from "@/components/DragContext";
+import SelectionActions from "@/components/SelectionActions";
 
 interface ListLayoutProps {
   folders: any[];
@@ -39,10 +40,28 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       url: f.url,
       extension: f.extension,
       fileType: f.type,
+      bucketFileId: f.bucketFile,
       data: f,
     }));
     return [...folderItems, ...fileItems];
   }, [folders, files]);
+
+  // Get selected items for SelectionActions
+  const selectedItemsForActions = useMemo(() => {
+    return allItems
+      .filter((item) => selectedIds.has(item.id))
+      .map((item) => ({
+        id: item.id,
+        type: item.type,
+        name: item.name,
+        bucketFileId: item.type === "file" ? item.bucketFileId : undefined,
+      }));
+  }, [allItems, selectedIds]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setLastClickedId(null);
+  }, []);
 
   // Compute new selection based on click and modifier keys
   const computeNewSelection = useCallback(
@@ -188,6 +207,12 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
           onItemMouseUp={handleItemMouseUp}
         />
       )}
+
+      {/* Selection Actions Toolbar */}
+      <SelectionActions
+        selectedItems={selectedItemsForActions}
+        onClearSelection={handleClearSelection}
+      />
     </div>
   );
 };

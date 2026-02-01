@@ -248,13 +248,35 @@ const getChildFolders = async (parentFolderId: string) => {
 };
 
 const deleteFolderRecursively = async (folderId: string) => {
-  const children = await getChildFolders(folderId);
+  const { databases, storage } = await createAdminClient();
 
+  // 1. Delete all files in this folder
+  const filesInFolder = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.filesCollectionId,
+    [Query.equal("folderId", folderId)]
+  );
+
+  for (const file of filesInFolder.documents) {
+    // Delete file from database
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      file.$id
+    );
+    // Delete file from storage
+    if (file.bucketFile) {
+      await storage.deleteFile(appwriteConfig.bucketId, file.bucketFile);
+    }
+  }
+
+  // 2. Recursively delete all child folders
+  const children = await getChildFolders(folderId);
   for (const child of children.documents) {
     await deleteFolderRecursively(child.$id);
   }
 
-  const { databases } = await createAdminClient();
+  // 3. Delete this folder
   await databases.deleteDocument(
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
@@ -400,4 +422,26 @@ const isFolderDescendant = async (
   }
 
   return false;
+};
+
+/* ============================
+   BULK DELETE FOLDERS
+============================ */
+export const deleteFolders = async ({
+  folderIds,
+  path,
+}: {
+  folderIds: string[];
+  path: string;
+}) => {
+  try {
+    for (const folderId of folderIds) {
+      await deleteFolderRecursively(folderId);
+    }
+
+    revalidatePath(path);
+    return parseStringify({ success: true, count: folderIds.length });
+  } catch (error) {
+    handleError(error, "Failed to delete folders");
+  }
 };

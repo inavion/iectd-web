@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import FolderCardList from "@/components/FolderCardList";
 import FileCardList from "@/components/FileCardList";
 import { useDrag, DraggedItem } from "@/components/DragContext";
+import SelectionActions from "@/components/SelectionActions";
 
 interface GridLayoutProps {
   folders: any[];
@@ -39,10 +40,28 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
       url: f.url,
       extension: f.extension,
       fileType: f.type,
+      bucketFileId: f.bucketFile,
       data: f,
     }));
     return [...folderItems, ...fileItems];
   }, [folders, files]);
+
+  // Get selected items for SelectionActions
+  const selectedItemsForActions = useMemo(() => {
+    return allItems
+      .filter((item) => selectedIds.has(item.id))
+      .map((item) => ({
+        id: item.id,
+        type: item.type,
+        name: item.name,
+        bucketFileId: item.type === "file" ? item.bucketFileId : undefined,
+      }));
+  }, [allItems, selectedIds]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setLastClickedId(null);
+  }, []);
 
   // Compute new selection based on click and modifier keys
   const computeNewSelection = useCallback(
@@ -183,6 +202,12 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
           />
         </section>
       )}
+
+      {/* Selection Actions Toolbar */}
+      <SelectionActions
+        selectedItems={selectedItemsForActions}
+        onClearSelection={handleClearSelection}
+      />
     </div>
   );
 };
