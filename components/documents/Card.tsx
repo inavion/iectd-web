@@ -1,11 +1,11 @@
 "use client";
 
 import { Models } from "node-appwrite";
-import Thumbnail from "./Thumbnail";
+import Thumbnail from "@/components/Thumbnail";
 import { convertFileSize } from "@/lib/utils";
-import FormattedDateTime from "./FormattedDateTime";
-import ActionDropdown from "./ActionDropdown";
-import { Props } from "./ActionsModalContent";
+import FormattedDateTime from "@/components/FormattedDateTime";
+import ActionDropdown from "@/components/documents/ActionDropdown";
+import { Props } from "@/components/ActionsModalContent";
 
 interface CardProps {
   file: Models.Document &

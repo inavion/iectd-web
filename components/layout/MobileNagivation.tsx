@@ -10,14 +10,14 @@ import { avatarPlaceholderUrl, navItems } from "@/constants";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Separator } from "./ui/separator";
+import { Separator } from "../ui/separator";
 
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Button } from "./ui/button";
-import FileUploader from "./FileUploader";
+import { Button } from "../ui/button";
+import FileUploader from "../FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
-import CreateNew from "./CreateNew";
+import CreateNew from "../CreateNew";
 
 declare interface Props {
   $id: string;
@@ -86,7 +86,7 @@ const MobileNagivation = ({
                     <li
                       className={cn(
                         "mobile-nav-item h5",
-                        pathname === url && "shad-active"
+                        pathname === url && "shad-active",
                       )}
                     >
                       <Image
@@ -96,7 +96,7 @@ const MobileNagivation = ({
                         height={24}
                         className={cn(
                           "nav-icon",
-                          pathname === url && "nav-icon-active"
+                          pathname === url && "nav-icon-active",
                         )}
                       />
                       <p>{name}</p>

@@ -4,10 +4,16 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import FolderDropdown from "@/components/FolderDropdown";
 import FormattedDateTime from "@/components/FormattedDateTime";
-import { moveFileToFolder, moveFilesToFolder } from "@/lib/actions/file.actions";
-import { moveFolderToFolder, moveFoldersToFolder } from "@/lib/actions/folder.actions";
+import {
+  moveFileToFolder,
+  moveFilesToFolder,
+} from "@/lib/actions/file.actions";
+import {
+  moveFolderToFolder,
+  moveFoldersToFolder,
+} from "@/lib/actions/folder.actions";
 import { toast } from "sonner";
-import { DraggedItem } from "@/components/DragContext";
+import { DraggedItem } from "@/components/drag-drop/DragContext";
 
 interface FolderRowProps {
   folder: any;
@@ -32,7 +38,9 @@ const FolderRow = ({
   const path = usePathname();
 
   // Check if this folder is a valid drop target (not dropping onto self)
-  const canDrop = draggedItems.length > 0 && !draggedItems.some((item) => item.id === folder.$id);
+  const canDrop =
+    draggedItems.length > 0 &&
+    !draggedItems.some((item) => item.id === folder.$id);
 
   const handleMouseUp = async (e: React.MouseEvent) => {
     // Handle drop if items are being dragged
@@ -41,8 +49,12 @@ const FolderRow = ({
       const validItems = draggedItems.filter((item) => item.id !== folder.$id);
       if (validItems.length > 0) {
         try {
-          const fileIds = validItems.filter((item) => item.type === "file").map((item) => item.id);
-          const folderIds = validItems.filter((item) => item.type === "folder").map((item) => item.id);
+          const fileIds = validItems
+            .filter((item) => item.type === "file")
+            .map((item) => item.id);
+          const folderIds = validItems
+            .filter((item) => item.type === "folder")
+            .map((item) => item.id);
 
           // Move files
           if (fileIds.length > 0) {
@@ -92,7 +104,7 @@ const FolderRow = ({
         return;
       }
     }
-    
+
     // No drag - handle selection deselect
     onMouseUp(e);
   };

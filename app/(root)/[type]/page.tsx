@@ -2,20 +2,24 @@ import { cookies } from "next/headers";
 import { Props } from "@/components/ActionsModalContent";
 import Sort from "@/components/Sort";
 import { getFiles, getFilesByFolder } from "@/lib/actions/file.actions";
-import { getFoldersByParent, getFolderById } from "@/lib/actions/folder.actions";
+import {
+  getFoldersByParent,
+  getFolderById,
+} from "@/lib/actions/folder.actions";
 import { getCurrentUser } from "@/lib/actions/user.actions";
 import { Models } from "node-appwrite";
 import { MAX_FILE_SIZE } from "@/constants";
-import DragAndDrop from "@/components/DragAndDrop";
-import DragDropOverlay from "@/components/DragDropOverlay";
-import ListLayout from "@/components/ListLayout";
-import GridLayout from "@/components/GridLayout";
+import DragAndDrop from "@/components/drag-drop/DragAndDrop";
+import DragDropOverlay from "@/components/drag-drop/DragDropOverlay";
+import ListLayout from "@/components/documents/ListLayout";
+import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
 import Link from "next/link";
 import Image from "next/image";
 
-
-async function buildBreadcrumbPath(folderId: string | null): Promise<Array<{ id: string; name: string }>> {
+async function buildBreadcrumbPath(
+  folderId: string | null,
+): Promise<Array<{ id: string; name: string }>> {
   const path: Array<{ id: string; name: string }> = [];
   let currentFolderId = folderId;
 
@@ -34,7 +38,6 @@ async function buildBreadcrumbPath(folderId: string | null): Promise<Array<{ id:
   return path;
 }
 
-
 const Page = async ({ searchParams }: SearchParamProps) => {
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("Not authenticated");
@@ -45,7 +48,10 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   // Get view from URL or cookie
   const cookieStore = await cookies();
-  const savedView = cookieStore.get("viewMode")?.value as "list" | "grid" | undefined;
+  const savedView = cookieStore.get("viewMode")?.value as
+    | "list"
+    | "grid"
+    | undefined;
   const view = (params?.view as "list" | "grid") || savedView || "list";
 
   let folders: any = { documents: [], total: 0 };
@@ -56,7 +62,9 @@ const Page = async ({ searchParams }: SearchParamProps) => {
     // Filter to show only the searched item
     if (searchType === "folder") {
       const folder = await getFolderById(searchId);
-      folders = folder ? { documents: [folder], total: 1 } : { documents: [], total: 0 };
+      folders = folder
+        ? { documents: [folder], total: 1 }
+        : { documents: [], total: 0 };
       // Build path from parent folder
       if (folder?.parentFolderId) {
         locationPath = await buildBreadcrumbPath(folder.parentFolderId);
@@ -64,7 +72,9 @@ const Page = async ({ searchParams }: SearchParamProps) => {
     } else {
       const allFiles = await getFiles({ limit: 100 });
       const file = allFiles?.documents?.find((f: any) => f.$id === searchId);
-      files = file ? { documents: [file], total: 1 } : { documents: [], total: 0 };
+      files = file
+        ? { documents: [file], total: 1 }
+        : { documents: [], total: 0 };
       // Build path from file's folder
       if (file?.folderId) {
         locationPath = await buildBreadcrumbPath(file.folderId);
@@ -83,7 +93,7 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   const totalUploadedBytes = files.documents.reduce(
     (acc: number, file: Models.Document & Props) => acc + (file.size || 0),
-    0
+    0,
   );
 
   const totalUploadedMB = formatBytesToMB(totalUploadedBytes);
@@ -133,7 +143,10 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
         <div className="total-size-section">
           <p className="body-1">
-            Total: <span className="h5">{totalUploadedMB} / {maxStorageMB} MB</span>
+            Total:{" "}
+            <span className="h5">
+              {totalUploadedMB} / {maxStorageMB} MB
+            </span>
           </p>
 
           <div className="sort-container">

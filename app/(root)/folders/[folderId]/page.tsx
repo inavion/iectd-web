@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
 import { getFilesByFolder } from "@/lib/actions/file.actions";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import DragAndDrop from "@/components/DragAndDrop";
-import DragDropOverlay from "@/components/DragDropOverlay";
+import Breadcrumbs from "@/components/layout/Breadcrumbs";
+import DragAndDrop from "@/components/drag-drop/DragAndDrop";
+import DragDropOverlay from "@/components/drag-drop/DragDropOverlay";
 import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/ListLayout";
 import GridLayout from "@/components/GridLayout";
@@ -27,7 +27,10 @@ const FolderPage = async ({
 
   // Get view from URL params first, then cookie, then default to "list"
   const cookieStore = await cookies();
-  const savedView = cookieStore.get("viewMode")?.value as "list" | "grid" | undefined;
+  const savedView = cookieStore.get("viewMode")?.value as
+    | "list"
+    | "grid"
+    | undefined;
   const urlView = (await searchParams)?.view as "list" | "grid" | undefined;
   const view = urlView || savedView || "list";
 

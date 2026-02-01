@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getFolderById, moveFolderToFolder, moveFoldersToFolder } from "@/lib/actions/folder.actions";
-import { moveFileToFolder, moveFilesToFolder } from "@/lib/actions/file.actions";
-import { useDrag } from "@/components/DragContext";
+import {
+  getFolderById,
+  moveFolderToFolder,
+  moveFoldersToFolder,
+} from "@/lib/actions/folder.actions";
+import {
+  moveFileToFolder,
+  moveFilesToFolder,
+} from "@/lib/actions/file.actions";
+import { useDrag } from "@/components/drag-drop/DragContext";
 import { toast } from "sonner";
 
 import {
@@ -59,16 +66,25 @@ const Breadcrumbs = () => {
     buildCrumbs();
   }, [pathname]);
 
-  const handleDrop = async (targetFolderId: string | null, targetName: string) => {
+  const handleDrop = async (
+    targetFolderId: string | null,
+    targetName: string,
+  ) => {
     if (draggedItems.length === 0) return;
-    
+
     // Filter out items that can't be dropped (the target folder itself)
-    const validItems = draggedItems.filter((item) => item.id !== targetFolderId);
+    const validItems = draggedItems.filter(
+      (item) => item.id !== targetFolderId,
+    );
     if (validItems.length === 0) return;
 
     try {
-      const fileIds = validItems.filter((item) => item.type === "file").map((item) => item.id);
-      const folderIds = validItems.filter((item) => item.type === "folder").map((item) => item.id);
+      const fileIds = validItems
+        .filter((item) => item.type === "file")
+        .map((item) => item.id);
+      const folderIds = validItems
+        .filter((item) => item.type === "folder")
+        .map((item) => item.id);
 
       // Move files
       if (fileIds.length > 0) {

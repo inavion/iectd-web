@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ChatMessage from "@/components/ChatMessage";
+import ChatMessage from "@/components/ai/ChatMessage";
 import {
   sendChatMessage,
   type ChatMessage as ChatMessageType,
@@ -75,7 +75,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
+        err instanceof Error ? err.message : "An unexpected error occurred",
       );
     } finally {
       setIsLoading(false);
@@ -235,7 +235,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
               className={cn(
                 "h-12 rounded-full border-light-200/40 bg-light-400/50 px-5 pr-12 text-sm shadow-none",
                 "focus-visible:border-brand focus-visible:ring-brand/20",
-                "placeholder:text-light-200"
+                "placeholder:text-light-200",
               )}
               aria-label="Chat message input"
             />
@@ -246,7 +246,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
             disabled={!inputValue.trim() || isLoading}
             className={cn(
               "h-12 w-12 shrink-0 rounded-full p-0",
-              "bg-brand hover:bg-brand-100 disabled:bg-light-200"
+              "bg-brand hover:bg-brand-100 disabled:bg-light-200",
             )}
             aria-label="Send message"
           >

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/actions/user.actions";
 import { getAccessToken, getUserEmail } from "@/lib/actions/auth.actions";
-import AIAssistant from "@/components/AIAssistant";
+import AIAssistant from "@/components/ai/AIAssistant";
 
 const AIAssistantPage = async () => {
   // Check Appwrite authentication
@@ -28,8 +28,8 @@ const AIAssistantPage = async () => {
           <div className="mb-4 text-6xl">🔐</div>
           <h2 className="h3 mb-2 text-dark-100">AI Assistant Not Available</h2>
           <p className="body-2 max-w-md text-light-200">
-            Please sign out and sign in again to enable the AI Assistant feature.
-            This is required to set up your AI authentication tokens.
+            Please sign out and sign in again to enable the AI Assistant
+            feature. This is required to set up your AI authentication tokens.
           </p>
         </div>
       )}

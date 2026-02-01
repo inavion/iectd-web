@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/input-otp";
 import Image from "next/image";
 import { useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
 import { loginUser } from "@/lib/actions/auth.actions";
 import { useRouter } from "next/navigation";
@@ -34,10 +34,12 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (
+    e: React.FormEvent | React.MouseEvent<HTMLButtonElement>,
+  ) => {
     e.preventDefault();
     if (otp.length !== 6) return; // Don't submit if OTP is incomplete
-    
+
     setIsLoading(true);
 
     try {
@@ -95,10 +97,10 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <InputOTP 
-          maxLength={6} 
-          value={otp} 
-          onChange={setOtp} 
+        <InputOTP
+          maxLength={6}
+          value={otp}
+          onChange={setOtp}
           onKeyDown={handleKeyDown}
           autoFocus
         >
