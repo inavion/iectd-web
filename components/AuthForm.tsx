@@ -203,18 +203,26 @@ const AuthForm = ({ type }: { type: FormType }) => {
             <p className="error-message body-2">* {errorMessage}</p>
           )}
 
+          {/* Temporarily disabled sign-up option */}
           <div className="body-2 flex justify-center">
-            <p className="text-light-100">
-              {type === "sign-in"
-                ? "Don't have an account?"
-                : "Already have an account?"}
-            </p>
-            <Link
-              href={type === "sign-in" ? "/sign-up" : "/sign-in"}
-              className="ml-1 font-medium text-brand"
-            >
-              {type === "sign-in" ? "Sign Up" : "Sign In"}
-            </Link>
+            {type === "sign-in" ? (
+              <p className="text-gray-500/50 select-none">
+                Don&apos;t have an account?
+                <span className="ml-1 font-medium cursor-not-allowed">
+                  Sign Up
+                </span>
+              </p>
+            ) : (
+              <>
+                <p className="text-light-100">Already have an account?</p>
+                <Link
+                  href="/sign-in"
+                  className="ml-1 font-medium text-brand"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
         </form>
       </Form>

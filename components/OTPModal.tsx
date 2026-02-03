@@ -34,8 +34,10 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    if (otp.length !== 6) return; // Don't submit if OTP is incomplete
+    
     setIsLoading(true);
 
     try {
@@ -59,6 +61,13 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
     }
 
     setIsLoading(false);
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && otp.length === 6 && !isLoading) {
+      handleSubmit(e);
+    }
   };
 
   const handleResendOTP = async () => {
@@ -86,7 +95,13 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
+        <InputOTP 
+          maxLength={6} 
+          value={otp} 
+          onChange={setOtp} 
+          onKeyDown={handleKeyDown}
+          autoFocus
+        >
           <InputOTPGroup className="shad-otp">
             <InputOTPSlot index={0} className="shad-otp-slot" />
             <InputOTPSlot index={1} className="shad-otp-slot" />
