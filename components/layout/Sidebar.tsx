@@ -94,9 +94,9 @@ const Sidebar = ({
           className="sidebar-user-avatar"
         />
 
-        <div className="hidden lg:block">
-          <p className="subtitle-2 capitalize">{fullName}</p>
-          <p className="caption">{email}</p>
+        <div className="hidden lg:block max-w-[140px]">
+          <p className="subtitle-2 capitalize truncate">{fullName}</p>
+          <p className="caption truncate">{email}</p>
         </div>
       </div>
     </aside>

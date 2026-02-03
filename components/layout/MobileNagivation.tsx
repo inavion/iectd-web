@@ -69,9 +69,9 @@ const MobileNagivation = ({
                 height={44}
                 className="header-user-avatar"
               />
-              <div className="lg:block">
-                <p className="subtitle-2 capitalize">{fullName}</p>
-                <p className="caption">{email}</p>
+              <div className="lg:block max-w-[180px]">
+                <p className="subtitle-2 capitalize truncate">{fullName}</p>
+                <p className="caption truncate">{email}</p>
               </div>
             </div>
             <Separator className="mb-4 bg-light-200/40" />
