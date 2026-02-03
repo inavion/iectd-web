@@ -119,7 +119,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
 
       const mergeAnnotations = (
         incoming: ChatMessageType["annotations"]
-      ): ChatMessageType["annotations"] => {
+      ): NonNullable<ChatMessageType["annotations"]> => {
         if (!incoming || incoming.length === 0) return [];
         const unique = new Map<string, (typeof incoming)[number]>();
         incoming.forEach((annotation) => {
