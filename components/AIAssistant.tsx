@@ -5,10 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatMessage from "@/components/ChatMessage";
-import {
-  sendChatMessage,
-  type ChatMessage as ChatMessageType,
-} from "@/lib/actions/chat.actions";
+import { type ChatMessage as ChatMessageType } from "@/lib/actions/chat.actions";
 import { cn } from "@/lib/utils";
 
 interface AIAssistantProps {
@@ -53,27 +50,134 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const assistantMessageId = `assistant-${Date.now()}`;
+    const assistantMessage: ChatMessageType = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setInputValue("");
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage(trimmedInput);
+      const response = await fetch("/api/chat/stream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: trimmedInput }),
+      });
 
-      if (response.status === "completed") {
-        const assistantMessage: ChatMessageType = {
-          id: response.response_id,
-          role: "assistant",
-          content: response.response,
-          annotations: response.annotations,
-          timestamp: new Date(),
-        };
+      if (response.status === 401) {
+        throw new Error("Session expired. Please sign in again.");
+      }
 
-        setMessages((prev) => [...prev, assistantMessage]);
-      } else {
-        throw new Error("Failed to get response from AI");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Chat API error");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Streaming response not available.");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      const appendDelta = (delta: string) => {
+        if (!delta) return;
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantMessageId
+              ? { ...message, content: message.content + delta }
+              : message
+          )
+        );
+      };
+
+      const finalizeMessage = (
+        finalText: string | undefined,
+        annotations: ChatMessageType["annotations"]
+      ) => {
+        if (!finalText && !annotations) return;
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantMessageId
+              ? {
+                  ...message,
+                  content: finalText ?? message.content,
+                  annotations: annotations ?? message.annotations,
+                }
+              : message
+          )
+        );
+      };
+
+      const mergeAnnotations = (
+        incoming: ChatMessageType["annotations"]
+      ): ChatMessageType["annotations"] => {
+        if (!incoming || incoming.length === 0) return [];
+        const unique = new Map<string, (typeof incoming)[number]>();
+        incoming.forEach((annotation) => {
+          const key = `${annotation.file_id}-${annotation.index}`;
+          if (!unique.has(key)) unique.set(key, annotation);
+        });
+        return Array.from(unique.values());
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() ?? "";
+
+        chunks.forEach((chunk) => {
+          const lines = chunk.split("\n");
+          lines.forEach((line) => {
+            if (!line.startsWith("data:")) return;
+            const data = line.replace(/^data:\s*/, "");
+            if (!data) return;
+
+            let payload: {
+              event?: string;
+              delta?: string;
+              response?: string;
+              annotations?: ChatMessageType["annotations"];
+            };
+
+            try {
+              payload = JSON.parse(data);
+            } catch {
+              return;
+            }
+
+            if (payload.event === "text_delta") {
+              appendDelta(payload.delta ?? "");
+            }
+
+            if (payload.annotations && payload.annotations.length > 0) {
+              const merged = mergeAnnotations(payload.annotations);
+              if (merged.length > 0) {
+                finalizeMessage(undefined, merged);
+              }
+            }
+
+            if (payload.event === "done") {
+              finalizeMessage(payload.response, payload.annotations);
+            }
+          });
+        });
       }
     } catch (err) {
+      setMessages((prev) =>
+        prev.filter((message) => message.id !== assistantMessageId)
+      );
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
       );
@@ -175,35 +279,19 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl">
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                annotations={message.annotations}
-                onFileClick={handleFileClick}
-              />
-            ))}
-
-            {/* Loading indicator */}
-            {isLoading && (
-              <div className="flex gap-3 py-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-300">
-                  <Image
-                    src="/assets/icons/ai-assistant.svg"
-                    alt="AI Assistant"
-                    width={18}
-                    height={18}
-                    className="opacity-80"
-                  />
-                </div>
-                <div className="flex items-center gap-1 rounded-2xl rounded-tl-none bg-white px-4 py-3 shadow-drop-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60 [animation-delay:-0.3s]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60 [animation-delay:-0.15s]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60" />
-                </div>
-              </div>
-            )}
+            {messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              return (
+                <ChatMessage
+                  key={message.id}
+                  role={message.role}
+                  content={message.content}
+                  annotations={message.annotations}
+                  isThinking={isLoading && message.role === "assistant" && isLastMessage}
+                  onFileClick={handleFileClick}
+                />
+              );
+            })}
 
             {/* Error message */}
             {error && (

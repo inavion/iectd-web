@@ -9,6 +9,7 @@ interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   annotations?: ChatAnnotation[];
+  isThinking?: boolean;
   onFileClick?: (fileId: string, filename: string) => void;
 }
 
@@ -21,9 +22,11 @@ const ChatMessage = ({
   role,
   content,
   annotations = [],
+  isThinking = false,
   onFileClick,
 }: ChatMessageProps) => {
   const isUser = role === "user";
+  const shouldShowThinking = isThinking && !content.trim();
 
   // Parse content and extract unique citations
   const parsedContent = useMemo((): ParsedContent => {
@@ -63,8 +66,17 @@ const ChatMessage = ({
         return <br key={lineIndex} />;
       }
 
+      // Check if it's a list item (starts with - or •)
+      const listItemMatch = line.match(/^\s*[-•]\s*/);
+      const isListItem = listItemMatch !== null;
+
+      // Remove the dash/bullet prefix for list items
+      const lineContent = isListItem
+        ? line.slice(listItemMatch[0].length)
+        : line;
+
       // Parse bold text (**text**)
-      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      const parts = lineContent.split(/(\*\*[^*]+\*\*)/g);
       const renderedParts = parts.map((part, partIndex) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
@@ -76,8 +88,8 @@ const ChatMessage = ({
         return part;
       });
 
-      // Check if it's a list item
-      if (line.trim().startsWith("-")) {
+      // Render as list item
+      if (isListItem) {
         return (
           <li key={lineIndex} className="ml-4 list-disc">
             {renderedParts}
@@ -142,11 +154,19 @@ const ChatMessage = ({
         )}
       >
         <div className={cn("text-sm leading-relaxed", isUser && "text-white")}>
-          {renderContent(parsedContent.text)}
+          {shouldShowThinking ? (
+            <div className="flex items-center gap-1">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60 [animation-delay:-0.3s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60 [animation-delay:-0.15s]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-brand/60" />
+            </div>
+          ) : (
+            renderContent(parsedContent.text)
+          )}
         </div>
 
         {/* Citations */}
-        {parsedContent.citations.size > 0 && !isUser && (
+        {parsedContent.citations.size > 0 && !isUser && !shouldShowThinking && (
           <div className="mt-3 border-t border-light-200/30 pt-3">
             <p className="mb-2 text-xs font-semibold text-light-100">
               Sources:
