@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import CreateNew from "@/components/templates/CreateNew";
+// REMOVE: import FolderTree from "@/components/navigation/FolderTree";
 
 interface Props {
   fullName: string;
@@ -52,8 +53,9 @@ const Sidebar = ({
       </Link>
 
       <nav className="sidebar-nav h5">
-        {/* ✅ ONE GLOBAL CREATE BUTTON */}
         <CreateNew currentPath={pathname} parentFolderId={parentFolderId} />
+
+        {/* REMOVE: <FolderTree currentFolderId={parentFolderId} /> */}
 
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {

@@ -88,6 +88,9 @@ export const verifySecret = async ({
       secure: true,
     });
 
+    const { createEctdStructureForUser } = await import("./folder.actions");
+    await createEctdStructureForUser({ path: "/documents" });
+
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
     handleError(error, "Failed to verify secret");

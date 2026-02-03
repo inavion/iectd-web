@@ -1,6 +1,6 @@
 "use client";
 
-import Card from "@/components/Card";
+import Card from "@/components/documents/Card";
 import { Models } from "node-appwrite";
 import { Props } from "@/components/ActionsModalContent";
 

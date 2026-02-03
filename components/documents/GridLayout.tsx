@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import FolderCardList from "@/components/FolderCardList";
-import FileCardList from "@/components/FileCardList";
+import FolderCardList from "@/components/documents/FolderCardList";
+import FileCardList from "@/components/documents/FileCardList";
 import { useDrag, DraggedItem } from "@/components/drag-drop/DragContext";
-import SelectionActions from "@/components/SelectionActions";
+import SelectionActions from "@/components/documents/SelectionActions";
 
 interface GridLayoutProps {
   folders: any[];

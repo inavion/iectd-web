@@ -1,6 +1,6 @@
 "use client";
 
-import FileRow from "@/components/list/FileRow";
+import FileRow from "@/components/documents/list/FileRow";
 import { Models } from "node-appwrite";
 import { Props } from "@/components/ActionsModalContent";
 

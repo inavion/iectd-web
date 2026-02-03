@@ -1,6 +1,6 @@
 "use client";
 
-import FolderRow from "@/components/list/FolderRow";
+import FolderRow from "@/components/documents/list/FolderRow";
 import { DraggedItem } from "@/components/drag-drop/DragContext";
 
 interface FolderRowListProps {

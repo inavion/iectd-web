@@ -8,6 +8,7 @@ import { parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
 import { FolderTemplateNode } from "@/templates/Guidance-for-Industry/fda-module2";
 import { FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE } from "@/templates/Guidance-for-Industry/fda-guidance-for-industry";
+import { IECTD_FOLDER_STRUCTURE, FolderNode } from "@/components/templates/iectd-folder-structure";
 
 const handleError = (error: unknown, message: string) => {
   console.error(error, message);
@@ -444,4 +445,135 @@ export const deleteFolders = async ({
   } catch (error) {
     handleError(error, "Failed to delete folders");
   }
+};
+
+
+/* ============================
+   CREATE ECTD FOLDER STRUCTURE FOR USER
+============================ */
+export const createEctdStructureForUser = async ({ path }: { path: string }) => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  // Check if user already has the eCTD root folder
+  const { databases } = await createAdminClient();
+  const existingFolders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "eCTD"),
+      Query.isNull("parentFolderId"),
+    ]
+  );
+
+  if (existingFolders.total > 0) {
+    // Structure already exists
+    return parseStringify({ status: "exists", folderId: existingFolders.documents[0].$id });
+  }
+
+  // Create the folder structure recursively
+  const createFolderNodeRecursively = async (
+    node: FolderNode,
+    parentFolderId: string | null
+  ): Promise<string> => {
+    const folder = await createFolder({
+      name: node.name,
+      parentFolderId,
+      path,
+    });
+
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        await createFolderNodeRecursively(child, folder.$id);
+      }
+    }
+
+    return folder.$id;
+  };
+
+  const rootFolderId = await createFolderNodeRecursively(IECTD_FOLDER_STRUCTURE, null);
+
+  revalidatePath(path);
+  return parseStringify({ status: "created", folderId: rootFolderId });
+};
+
+
+/* ============================
+   GET ALL FOLDERS FOR TREE VIEW
+============================ */
+export const getAllFoldersForTree = async () => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  const folders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.limit(1000), // Adjust as needed
+      Query.orderAsc("name"),
+    ]
+  );
+
+  return parseStringify(folders.documents);
+};
+
+/* ============================
+   FIND OR CREATE FOLDER BY PATH
+   Creates folders along the path if they don't exist
+============================ */
+export const findOrCreateFolderByPath = async ({
+  path: folderPath,
+  currentPath,
+}: {
+  path: string[]; // e.g., ["m2", "22-intro"]
+  currentPath: string;
+}): Promise<string> => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  let parentFolderId: string | null = null;
+
+  for (const folderName of folderPath) {
+    // Build query based on parent
+    const parentQuery = parentFolderId
+      ? Query.equal("parentFolderId", parentFolderId)
+      : Query.isNull("parentFolderId");
+
+    // Try to find existing folder with this name under the current parent
+    const existingFolders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [
+        Query.equal("accountId", currentUser.accountId),
+        Query.equal("name", folderName),
+        parentQuery,
+      ]
+    );
+
+    if (existingFolders.total > 0) {
+      // Folder exists, use it
+      parentFolderId = existingFolders.documents[0].$id as string;
+    } else {
+      // Create the folder
+      const newFolder = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.foldersCollectionId,
+        ID.unique(),
+        {
+          name: folderName,
+          parentFolderId: parentFolderId,
+          owner: currentUser.$id,
+          accountId: currentUser.accountId,
+        }
+      );
+      parentFolderId = newFolder.$id as string;
+    }
+  }
+
+  revalidatePath(currentPath);
+  return parentFolderId!;
 };

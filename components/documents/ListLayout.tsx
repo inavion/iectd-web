@@ -1,10 +1,10 @@
 "use client";
 
-import FolderRowList from "@/components/list/FolderRowList";
-import FileRowList from "@/components/list/FileRowList";
+import FolderRowList from "@/components/documents/list/FolderRowList";
+import FileRowList from "@/components/documents/list/FileRowList";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useDrag, DraggedItem } from "@/components/drag-drop/DragContext";
-import SelectionActions from "@/components/SelectionActions";
+import SelectionActions from "@/components/documents/SelectionActions";
 
 interface ListLayoutProps {
   folders: any[];

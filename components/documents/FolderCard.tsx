@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import FolderDropdown from "./FolderDropdown";
+import FolderDropdown from "@/components/FolderDropdown";
 import {
   moveFileToFolder,
   moveFilesToFolder,

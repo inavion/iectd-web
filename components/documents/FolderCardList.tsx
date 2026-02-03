@@ -1,6 +1,6 @@
 "use client";
 
-import FolderCard from "@/components/FolderCard";
+import FolderCard from "@/components/documents/FolderCard";
 import { DraggedItem } from "@/components/drag-drop/DragContext";
 
 interface FolderCardListProps {

@@ -5,8 +5,8 @@ import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import DragAndDrop from "@/components/drag-drop/DragAndDrop";
 import DragDropOverlay from "@/components/drag-drop/DragDropOverlay";
 import { getCurrentUser } from "@/lib/actions/user.actions";
-import ListLayout from "@/components/ListLayout";
-import GridLayout from "@/components/GridLayout";
+import ListLayout from "@/components/documents/ListLayout";
+import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
 
 const FolderPage = async ({

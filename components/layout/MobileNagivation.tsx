@@ -17,7 +17,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import FileUploader from "../FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
-import CreateNew from "../CreateNew";
+import CreateNew from "@/components/templates/CreateNew";
 
 declare interface Props {
   $id: string;
