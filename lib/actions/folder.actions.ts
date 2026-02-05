@@ -449,20 +449,20 @@ export const deleteFolders = async ({
 
 
 /* ============================
-   CREATE ECTD FOLDER STRUCTURE FOR USER
+   CREATE IECTD FOLDER STRUCTURE FOR USER
 ============================ */
 export const createEctdStructureForUser = async ({ path }: { path: string }) => {
   const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("User not authenticated");
 
-  // Check if user already has the eCTD root folder
+  // Check if user already has the ieCTD/Drugs root folder
   const { databases } = await createAdminClient();
   const existingFolders = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
     [
       Query.equal("accountId", currentUser.accountId),
-      Query.equal("name", "eCTD"),
+      Query.equal("name", "ieCTD/Drugs"),
       Query.isNull("parentFolderId"),
     ]
   );

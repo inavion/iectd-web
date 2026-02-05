@@ -4,8 +4,11 @@ export interface FolderNode {
 }
 
 export const IECTD_FOLDER_STRUCTURE: FolderNode = {
-  name: "eCTD",
+  name: "ieCTD/Drugs",
   children: [
+    {
+      name: "m1"
+    },
     {
       name: "m2",
       children: [
@@ -300,4 +303,22 @@ export const IECTD_FOLDER_STRUCTURE: FolderNode = {
       ],
     },
   ],
+};
+
+
+export const getAllTemplateFolderNames = (): string[] => {
+  const names: string[] = [];
+  
+  const collectNames = (node: FolderNode) => {
+    names.push(node.name);
+    if (node.children) {
+      node.children.forEach(collectNames);
+    }
+  };
+  
+  collectNames(IECTD_FOLDER_STRUCTURE);
+  // Also add "Guidance for Industry" as it's the parent wrapper
+  names.push("Guidance for Industry");
+  
+  return names;
 };

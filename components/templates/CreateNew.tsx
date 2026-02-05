@@ -21,10 +21,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createFolder, findOrCreateFolderByPath } from "@/lib/actions/folder.actions";
+import {
+  createFolder,
+  findOrCreateFolderByPath,
+} from "@/lib/actions/folder.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { IECTD_FOLDER_STRUCTURE, FolderNode } from "@/components/templates/iectd-folder-structure";
+import {
+  IECTD_FOLDER_STRUCTURE,
+  FolderNode,
+} from "@/components/templates/iectd-folder-structure";
 import { toast } from "sonner";
 
 // Format module name: "m2" -> "MODULE 2", "m3" -> "MODULE 3"
@@ -98,13 +104,16 @@ const FolderTreeNode = ({
   const handleNameClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!isModuleLevel) {
       // Non-module items: clicking name navigates to folder
       onNavigate(currentPath);
     } else if (hasChildren) {
-      // Module items: clicking toggles expand
+      // Module items with children: clicking toggles expand
       setIsExpanded(!isExpanded);
+    } else {
+      // Module items without children: navigate to folder
+      onNavigate(currentPath);
     }
   };
 
@@ -117,10 +126,7 @@ const FolderTreeNode = ({
   };
 
   return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <div
         className={`
           flex items-center justify-between py-2.5 px-4 cursor-pointer
@@ -130,7 +136,7 @@ const FolderTreeNode = ({
         `}
         style={{ paddingLeft: `${level * 16 + 16}px` }}
       >
-        <span 
+        <span
           className="flex-1 truncate text-sm hover:text-brand"
           onClick={handleNameClick}
         >
@@ -138,7 +144,7 @@ const FolderTreeNode = ({
         </span>
 
         {hasChildren && (
-          <span 
+          <span
             className="text-gray-400 ml-2 hover:text-gray-600"
             onClick={handleChevronClick}
           >
@@ -158,15 +164,16 @@ const FolderTreeNode = ({
           ${isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"}
         `}
       >
-        {hasChildren && node.children!.map((child, index) => (
-          <FolderTreeNode
-            key={`${child.name}-${index}`}
-            node={child}
-            level={level + 1}
-            path={currentPath}
-            onNavigate={onNavigate}
-          />
-        ))}
+        {hasChildren &&
+          node.children!.map((child, index) => (
+            <FolderTreeNode
+              key={`${child.name}-${index}`}
+              node={child}
+              level={level + 1}
+              path={currentPath}
+              onNavigate={onNavigate}
+            />
+          ))}
       </div>
     </div>
   );
@@ -207,12 +214,12 @@ const CreateNew = ({
     try {
       // Add "Guidance for Industry" as the root folder
       const fullPath = ["Guidance for Industry", ...folderPath];
-      
+
       const folderId = await findOrCreateFolderByPath({
         path: fullPath,
         currentPath,
       });
-      
+
       router.push(`/folders/${folderId}`);
     } catch (error: any) {
       toast.error(error.message || "Failed to open folder");
@@ -270,7 +277,7 @@ const CreateNew = ({
             <DropdownMenuSeparator className="my-1 bg-brand-100/50" />
 
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="active-option">
+              <DropdownMenuSubTrigger className="active-option text-gray-400 cursor-not-allowed pointer-events-none line-through">
                 <Image
                   src="/assets/icons/templates.png"
                   alt="templates"

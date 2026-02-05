@@ -21,6 +21,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
+import { getAllTemplateFolderNames } from "@/components/templates/iectd-folder-structure";
 
 import {
   renameFolder,
@@ -43,6 +44,10 @@ const FolderDropdown = ({ folder }: { folder: Folder }) => {
   const [name, setName] = useState(folder.name);
   const [emails, setEmails] = useState<string[]>(folder.users || []);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Check if this is a protected template folder
+  const templateFolderNames = getAllTemplateFolderNames();
+  const isProtectedFolder = templateFolderNames.includes(folder.name);
 
   const path = usePathname();
 
@@ -183,26 +188,28 @@ const FolderDropdown = ({ folder }: { folder: Folder }) => {
 
           <DropdownMenuSeparator className="bg-light-200/20 my-2" />
 
-          {folderDropdownItems.map((item) => (
-            <DropdownMenuItem
-              key={item.value}
-              className="active-option"
-              onClick={() => {
-                setAction(item as ActionType);
-                setIsModalOpen(true);
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Image
-                  src={item.icon}
-                  alt={item.label}
-                  width={20}
-                  height={20}
-                />
-                {item.label}
-              </div>
-            </DropdownMenuItem>
-          ))}
+          {folderDropdownItems
+            .filter((item) => !(isProtectedFolder && item.value === "delete"))
+            .map((item) => (
+              <DropdownMenuItem
+                key={item.value}
+                className="active-option"
+                onClick={() => {
+                  setAction(item as ActionType);
+                  setIsModalOpen(true);
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={item.icon}
+                    alt={item.label}
+                    width={20}
+                    height={20}
+                  />
+                  {item.label}
+                </div>
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
 

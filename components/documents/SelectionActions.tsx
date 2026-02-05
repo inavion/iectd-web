@@ -15,6 +15,8 @@ import { deleteFiles } from "@/lib/actions/file.actions";
 import { deleteFolders } from "@/lib/actions/folder.actions";
 import { toast } from "sonner";
 
+import { getAllTemplateFolderNames } from "@/components/templates/iectd-folder-structure";
+
 interface SelectedItem {
   id: string;
   type: "file" | "folder";
@@ -42,12 +44,16 @@ const SelectionActions = ({
   if (!showToolbar && !showModal) return null;
 
   const fileCount = selectedItems.filter((item) => item.type === "file").length;
-  const folderCount = selectedItems.filter((item) => item.type === "folder").length;
+  const folderCount = selectedItems.filter(
+    (item) => item.type === "folder",
+  ).length;
 
   const getSelectionText = () => {
     const parts = [];
-    if (fileCount > 0) parts.push(`${fileCount} file${fileCount > 1 ? "s" : ""}`);
-    if (folderCount > 0) parts.push(`${folderCount} folder${folderCount > 1 ? "s" : ""}`);
+    if (fileCount > 0)
+      parts.push(`${fileCount} file${fileCount > 1 ? "s" : ""}`);
+    if (folderCount > 0)
+      parts.push(`${folderCount} folder${folderCount > 1 ? "s" : ""}`);
     return parts.join(" and ");
   };
 
@@ -62,9 +68,23 @@ const SelectionActions = ({
           bucketFileId: item.bucketFileId!,
         }));
 
+      const templateFolderNames = getAllTemplateFolderNames();
       const folderIds = selectedItems
-        .filter((item) => item.type === "folder")
+        .filter(
+          (item) =>
+            item.type === "folder" && !templateFolderNames.includes(item.name),
+        )
         .map((item) => item.id);
+
+      // Count protected folders that were skipped
+      const protectedCount = selectedItems.filter(
+        (item) =>
+          item.type === "folder" && templateFolderNames.includes(item.name),
+      ).length;
+
+      if (protectedCount > 0) {
+        toast.warning(`${protectedCount} template folder(s) cannot be deleted`);
+      }
 
       // Delete files
       if (filesToDelete.length > 0) {
@@ -130,10 +150,13 @@ const SelectionActions = ({
       )}
 
       {/* Delete confirmation modal */}
-      <Dialog open={isDeleteModalOpen} onOpenChange={(open) => {
-        if (!isDeleting) setIsDeleteModalOpen(open);
-      }}>
-        <DialogContent 
+      <Dialog
+        open={isDeleteModalOpen}
+        onOpenChange={(open) => {
+          if (!isDeleting) setIsDeleteModalOpen(open);
+        }}
+      >
+        <DialogContent
           className={`shad-dialog button ${isDeleting ? "[&>button]:hidden" : ""}`}
           onPointerDownOutside={(e) => {
             if (isDeleting) e.preventDefault();
@@ -152,7 +175,8 @@ const SelectionActions = ({
           </DialogHeader>
 
           <p className="text-center text-light-200 text-sm py-2">
-            Are you sure you want to delete {getSelectionText()}? This action cannot be undone.
+            Are you sure you want to delete {getSelectionText()}? This action
+            cannot be undone.
           </p>
 
           <DialogFooter className="flex flex-col gap-3 md:flex-row text-white">

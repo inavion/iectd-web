@@ -18,10 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Link from "next/link";
 import { createAccount, signInUser } from "@/lib/actions/user.actions";
-import {
-  registerUser,
-  loginUser,
-} from "@/lib/actions/auth.actions";
+import { registerUser, loginUser } from "@/lib/actions/auth.actions";
 import OTPModal from "./OTPModal";
 
 type FormType = "sign-in" | "sign-up";
@@ -206,19 +203,16 @@ const AuthForm = ({ type }: { type: FormType }) => {
           {/* Temporarily disabled sign-up option */}
           <div className="body-2 flex justify-center">
             {type === "sign-in" ? (
-              <p className="text-gray-500/50 select-none">
-                Don&apos;t have an account?
-                <span className="ml-1 font-medium cursor-not-allowed">
+              <>
+                <p className="text-light-100">Don&apos;t have an account?</p>
+                <Link href="/sign-up" className="ml-1 font-medium text-brand">
                   Sign Up
-                </span>
-              </p>
+                </Link>
+              </>
             ) : (
               <>
                 <p className="text-light-100">Already have an account?</p>
-                <Link
-                  href="/sign-in"
-                  className="ml-1 font-medium text-brand"
-                >
+                <Link href="/sign-in" className="ml-1 font-medium text-brand">
                   Sign In
                 </Link>
               </>
