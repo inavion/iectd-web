@@ -21,16 +21,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { Models } from "node-appwrite";
 import { useState } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 import {
   deleteFileUsers,
   renameFile,
   updateFileUsers,
 } from "@/lib/actions/file.actions";
-import { FileDetails, ShareInput } from "./ActionsModalContent";
-import { Props } from "./ActionsModalContent";
+import { FileDetails, ShareInput } from "@/components/ActionsModalContent";
+import { Props } from "@/components/ActionsModalContent";
 
 const ActionDropdown = ({
   file,

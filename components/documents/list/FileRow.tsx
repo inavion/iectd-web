@@ -1,7 +1,7 @@
 "use client";
 
 import Thumbnail from "@/components/Thumbnail";
-import ActionDropdown from "@/components/ActionDropdown";
+import ActionDropdown from "@/components/documents/ActionDropdown";
 import { convertFileSize } from "@/lib/utils";
 import FormattedDateTime from "@/components/FormattedDateTime";
 import { Models } from "node-appwrite";

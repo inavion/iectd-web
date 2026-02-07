@@ -1,7 +1,7 @@
 import Image from "next/image";
-import FileUploader from "./FileUploader";
+import FileUploader from "../FileUploader";
 import { signOutUser } from "@/lib/actions/user.actions";
-import Search from "./Search";
+import Search from "../Search";
 
 const Header = ({
   userId,

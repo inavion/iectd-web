@@ -6,7 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import CreateNew from "./CreateNew";
+import CreateNew from "@/components/templates/CreateNew";
+// REMOVE: import FolderTree from "@/components/navigation/FolderTree";
 
 interface Props {
   fullName: string;
@@ -52,8 +53,9 @@ const Sidebar = ({
       </Link>
 
       <nav className="sidebar-nav h5">
-        {/* ✅ ONE GLOBAL CREATE BUTTON */}
-        <CreateNew currentPath={pathname} parentFolderId={parentFolderId}/>
+        <CreateNew currentPath={pathname} parentFolderId={parentFolderId} />
+
+        {/* REMOVE: <FolderTree currentFolderId={parentFolderId} /> */}
 
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {
@@ -62,7 +64,7 @@ const Sidebar = ({
                 <li
                   className={cn(
                     "sidebar-nav-item h5",
-                    pathname === url && "shad-active"
+                    pathname === url && "shad-active",
                   )}
                 >
                   <Image
@@ -72,7 +74,7 @@ const Sidebar = ({
                     height={24}
                     className={cn(
                       "nav-icon",
-                      pathname === url && "nav-icon-active"
+                      pathname === url && "nav-icon-active",
                     )}
                   />
                   <p className="lg:block hidden">{name}</p>
@@ -83,7 +85,6 @@ const Sidebar = ({
         </ul>
       </nav>
 
-
       <div className="sidebar-user-info">
         <Image
           src={avatarPlaceholderUrl}
@@ -93,9 +94,9 @@ const Sidebar = ({
           className="sidebar-user-avatar"
         />
 
-        <div className="hidden lg:block">
-          <p className="subtitle-2 capitalize">{fullName}</p>
-          <p className="caption">{email}</p>
+        <div className="hidden lg:block max-w-[140px]">
+          <p className="subtitle-2 capitalize truncate">{fullName}</p>
+          <p className="caption truncate">{email}</p>
         </div>
       </div>
     </aside>

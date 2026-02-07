@@ -1,10 +1,10 @@
 "use client";
 
-import FileRow from "@/components/list/FileRow";
+import Card from "@/components/documents/Card";
 import { Models } from "node-appwrite";
 import { Props } from "@/components/ActionsModalContent";
 
-interface FileRowListProps {
+interface FileCardListProps {
   files: (Models.Document &
     Props & {
       owner: Models.Document & { fullName: string };
@@ -15,16 +15,16 @@ interface FileRowListProps {
   onItemMouseUp: (id: string, e: React.MouseEvent) => void;
 }
 
-export default function FileRowList({
+export default function FileCardList({
   files,
   selectedIds,
   onItemMouseDown,
   onItemMouseUp,
-}: FileRowListProps) {
+}: FileCardListProps) {
   return (
     <>
       {files.map((file) => (
-        <FileRow
+        <Card
           key={file.$id}
           file={file}
           isSelected={selectedIds.has(file.$id)}

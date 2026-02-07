@@ -4,8 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ChatMessage from "@/components/ChatMessage";
-import { type ChatMessage as ChatMessageType } from "@/lib/actions/chat.actions";
+import ChatMessage from "@/components/ai/ChatMessage";
+import {
+  sendChatMessage,
+  type ChatMessage as ChatMessageType,
+} from "@/lib/actions/chat.actions";
 import { cn } from "@/lib/utils";
 
 interface AIAssistantProps {
@@ -94,14 +97,14 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
           prev.map((message) =>
             message.id === assistantMessageId
               ? { ...message, content: message.content + delta }
-              : message
-          )
+              : message,
+          ),
         );
       };
 
       const finalizeMessage = (
         finalText: string | undefined,
-        annotations: ChatMessageType["annotations"]
+        annotations: ChatMessageType["annotations"],
       ) => {
         if (!finalText && !annotations) return;
         setMessages((prev) =>
@@ -112,13 +115,13 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
                   content: finalText ?? message.content,
                   annotations: annotations ?? message.annotations,
                 }
-              : message
-          )
+              : message,
+          ),
         );
       };
 
       const mergeAnnotations = (
-        incoming: ChatMessageType["annotations"]
+        incoming: ChatMessageType["annotations"],
       ): NonNullable<ChatMessageType["annotations"]> => {
         if (!incoming || incoming.length === 0) return [];
         const unique = new Map<string, (typeof incoming)[number]>();
@@ -176,10 +179,10 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
       }
     } catch (err) {
       setMessages((prev) =>
-        prev.filter((message) => message.id !== assistantMessageId)
+        prev.filter((message) => message.id !== assistantMessageId),
       );
       setError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
+        err instanceof Error ? err.message : "An unexpected error occurred",
       );
     } finally {
       setIsLoading(false);
@@ -287,7 +290,9 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
                   role={message.role}
                   content={message.content}
                   annotations={message.annotations}
-                  isThinking={isLoading && message.role === "assistant" && isLastMessage}
+                  isThinking={
+                    isLoading && message.role === "assistant" && isLastMessage
+                  }
                   onFileClick={handleFileClick}
                 />
               );
@@ -323,7 +328,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
               className={cn(
                 "h-12 rounded-full border-light-200/40 bg-light-400/50 px-5 pr-12 text-sm shadow-none",
                 "focus-visible:border-brand focus-visible:ring-brand/20",
-                "placeholder:text-light-200"
+                "placeholder:text-light-200",
               )}
               aria-label="Chat message input"
             />
@@ -334,7 +339,7 @@ const AIAssistant = ({ userEmail }: AIAssistantProps) => {
             disabled={!inputValue.trim() || isLoading}
             className={cn(
               "h-12 w-12 shrink-0 rounded-full p-0",
-              "bg-brand hover:bg-brand-100 disabled:bg-light-200"
+              "bg-brand hover:bg-brand-100 disabled:bg-light-200",
             )}
             aria-label="Send message"
           >

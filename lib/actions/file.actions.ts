@@ -477,3 +477,39 @@ export const moveFilesToFolder = async ({
     handleError(error, "Failed to move files");
   }
 };
+
+/* ============================
+   BULK DELETE FILES
+============================ */
+export const deleteFiles = async ({
+  files,
+  path,
+}: {
+  files: { fileId: string; bucketFileId: string }[];
+  path: string;
+}) => {
+  const { databases, storage } = await createAdminClient();
+
+  try {
+    const results = await Promise.all(
+      files.map(async ({ fileId, bucketFileId }) => {
+        const deletedFile = await databases.deleteDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.filesCollectionId,
+          fileId
+        );
+
+        if (deletedFile) {
+          await storage.deleteFile(appwriteConfig.bucketId, bucketFileId);
+        }
+
+        return deletedFile;
+      })
+    );
+
+    revalidatePath(path);
+    return parseStringify({ success: true, count: results.length });
+  } catch (error) {
+    handleError(error, "Failed to delete files");
+  }
+};

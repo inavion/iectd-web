@@ -1,9 +1,9 @@
 "use client";
 
-import FolderRow from "@/components/list/FolderRow";
-import { DraggedItem } from "@/components/DragContext";
+import FolderCard from "@/components/documents/FolderCard";
+import { DraggedItem } from "@/components/drag-drop/DragContext";
 
-interface FolderRowListProps {
+interface FolderCardListProps {
   folders: any[];
   selectedIds: Set<string>;
   onItemMouseDown: (id: string, e: React.MouseEvent) => void;
@@ -13,7 +13,7 @@ interface FolderRowListProps {
   setHoveredFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-export default function FolderRowList({
+export default function FolderCardList({
   folders,
   selectedIds,
   onItemMouseDown,
@@ -21,11 +21,11 @@ export default function FolderRowList({
   draggedItems,
   hoveredFolderId,
   setHoveredFolderId,
-}: FolderRowListProps) {
+}: FolderCardListProps) {
   return (
     <>
       {folders.map((folder) => (
-        <FolderRow
+        <FolderCard
           key={folder.$id}
           folder={folder}
           isSelected={selectedIds.has(folder.$id)}

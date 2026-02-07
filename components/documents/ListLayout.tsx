@@ -1,9 +1,10 @@
 "use client";
 
-import FolderRowList from "@/components/list/FolderRowList";
-import FileRowList from "@/components/list/FileRowList";
+import FolderRowList from "@/components/documents/list/FolderRowList";
+import FileRowList from "@/components/documents/list/FileRowList";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useDrag, DraggedItem } from "@/components/DragContext";
+import { useDrag, DraggedItem } from "@/components/drag-drop/DragContext";
+import SelectionActions from "@/components/documents/SelectionActions";
 
 interface ListLayoutProps {
   folders: any[];
@@ -31,6 +32,7 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       type: "folder" as const,
       name: f.name,
       data: f,
+      isSystem: f.isSystem,
     }));
     const fileItems = files.map((f) => ({
       id: f.$id,
@@ -39,21 +41,46 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       url: f.url,
       extension: f.extension,
       fileType: f.type,
+      bucketFileId: f.bucketFile,
       data: f,
     }));
     return [...folderItems, ...fileItems];
   }, [folders, files]);
 
+  // Get selected items for SelectionActions
+  const selectedItemsForActions = useMemo(() => {
+    return allItems
+      .filter((item) => selectedIds.has(item.id))
+      .map((item) => ({
+        id: item.id,
+        type: item.type,
+        name: item.name,
+        bucketFileId: item.type === "file" ? item.bucketFileId : undefined,
+        isSystem:item.type === "folder" ? item.isSystem : undefined,
+      }));
+  }, [allItems, selectedIds]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setLastClickedId(null);
+  }, []);
+
   // Compute new selection based on click and modifier keys
   const computeNewSelection = useCallback(
-    (id: string, e: React.MouseEvent, currentSelection: Set<string>): Set<string> => {
+    (
+      id: string,
+      e: React.MouseEvent,
+      currentSelection: Set<string>,
+    ): Set<string> => {
       const isShift = e.shiftKey;
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
       const newSelection = new Set(currentSelection);
 
       if (isShift && lastClickedId) {
         // Shift-click: select range
-        const lastIndex = allItems.findIndex((item) => item.id === lastClickedId);
+        const lastIndex = allItems.findIndex(
+          (item) => item.id === lastClickedId,
+        );
         const currentIndex = allItems.findIndex((item) => item.id === id);
 
         if (lastIndex !== -1 && currentIndex !== -1) {
@@ -79,7 +106,7 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
 
       return newSelection;
     },
-    [lastClickedId, allItems]
+    [lastClickedId, allItems],
   );
 
   // Combined handler for selection and drag start
@@ -90,7 +117,7 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
 
       // Compute the new selection
       let newSelection: Set<string>;
-      
+
       if (isShift || isCtrlOrCmd) {
         // Modifier key pressed - compute new selection
         newSelection = computeNewSelection(id, e, selectedIds);
@@ -127,7 +154,13 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       setPendingDragItems(dragItems);
       setMouseDownPos({ x: e.clientX, y: e.clientY });
     },
-    [selectedIds, allItems, computeNewSelection, setPendingDragItems, setMouseDownPos]
+    [
+      selectedIds,
+      allItems,
+      computeNewSelection,
+      setPendingDragItems,
+      setMouseDownPos,
+    ],
   );
 
   // Handle mouse up - deselect to single item if no drag occurred
@@ -140,12 +173,15 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       }
       setPendingDeselect(null);
     },
-    [pendingDeselect, draggedItems]
+    [pendingDeselect, draggedItems],
   );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setSelectedIds(new Set());
         setLastClickedId(null);
       }
@@ -188,6 +224,12 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
           onItemMouseUp={handleItemMouseUp}
         />
       )}
+
+      {/* Selection Actions Toolbar */}
+      <SelectionActions
+        selectedItems={selectedItemsForActions}
+        onClearSelection={handleClearSelection}
+      />
     </div>
   );
 };

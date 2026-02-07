@@ -8,6 +8,10 @@ import { parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
 import { FolderTemplateNode } from "@/templates/Guidance-for-Industry/fda-module2";
 import { FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE } from "@/templates/Guidance-for-Industry/fda-guidance-for-industry";
+import {
+  IECTD_FOLDER_STRUCTURE,
+  FolderNode,
+} from "@/components/templates/iectd-folder-structure";
 
 const handleError = (error: unknown, message: string) => {
   console.error(error, message);
@@ -18,10 +22,12 @@ export const createFolder = async ({
   name,
   parentFolderId,
   path,
+  isSystem,
 }: {
   name: string;
   parentFolderId?: string | null;
   path: string;
+  isSystem: boolean;
 }) => {
   const { databases } = await createAdminClient();
 
@@ -38,10 +44,14 @@ export const createFolder = async ({
         owner: currentUser.$id,
         accountId: currentUser.accountId,
         parentFolderId,
-      }
+        isSystem,
+      },
     );
 
+    console.log(folder.name, folder.isSystem);
+
     revalidatePath(path);
+
     return parseStringify(folder);
   } catch (error) {
     handleError(error, "Failed to create folder");
@@ -73,26 +83,30 @@ export const getFoldersByParent = async ({
     const folders = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
-      queries
+      queries,
     );
 
     // ✅ POPULATE OWNER HERE
-    const foldersWithOwners = await Promise.all(
-      folders.documents.map(async (folder) => {
-        if (!folder.owner) return folder;
+    const ownerIds = [
+      ...new Set(folders.documents.map((f) => f.owner).filter(Boolean)),
+    ];
 
-        const ownerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.usersCollectionId,
-          folder.owner
-        );
+    // 2. Fetch all owners in ONE query
+    let ownersMap: Record<string, any> = {};
+    if (ownerIds.length > 0) {
+      const owners = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.usersCollectionId,
+        [Query.equal("$id", ownerIds)],
+      );
+      ownersMap = Object.fromEntries(owners.documents.map((o) => [o.$id, o]));
+    }
 
-        return {
-          ...folder,
-          owner: ownerDoc,
-        };
-      })
-    );
+    // 3. Map owners to folders (no extra queries!)
+    const foldersWithOwners = folders.documents.map((folder) => ({
+      ...folder,
+      owner: folder.owner ? ownersMap[folder.owner] : null,
+    }));
 
     return parseStringify({
       ...folders,
@@ -122,7 +136,7 @@ export const renameFolder = async ({
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
       folderId,
-      { name }
+      { name },
     );
 
     revalidatePath(path);
@@ -151,7 +165,7 @@ export const updateFolderUsers = async ({
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
       folderId,
-      { users: emails }
+      { users: emails },
     );
 
     revalidatePath(path);
@@ -188,7 +202,7 @@ export const getFolderById = async (folderId: string) => {
     return await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
-      folderId
+      folderId,
     );
   } catch {
     return null;
@@ -199,16 +213,19 @@ const createFolderTree = async ({
   node,
   parentFolderId,
   path,
+  isSystem,
 }: {
   node: FolderTemplateNode;
   parentFolderId: string | null;
   path: string;
+  isSystem: boolean;
 }) => {
   // 1️⃣ Create THIS folder
   const folder = await createFolder({
     name: node.name,
     parentFolderId,
     path,
+    isSystem,
   });
 
   // 2️⃣ Create children under it
@@ -218,6 +235,7 @@ const createFolderTree = async ({
         node: child,
         parentFolderId: folder.$id,
         path,
+        isSystem,
       });
     }
   }
@@ -226,14 +244,17 @@ const createFolderTree = async ({
 export const createFDAGuidanceTemplate = async ({
   parentFolderId,
   path,
+  isSystem,
 }: {
   parentFolderId: string | null;
   path: string;
+  isSystem: boolean;
 }) => {
   await createFolderTree({
     node: FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE,
     parentFolderId,
     path,
+    isSystem,
   });
 };
 
@@ -243,22 +264,59 @@ const getChildFolders = async (parentFolderId: string) => {
   return databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
-    [Query.equal("parentFolderId", parentFolderId)]
+    [Query.equal("parentFolderId", parentFolderId)],
   );
 };
 
 const deleteFolderRecursively = async (folderId: string) => {
-  const children = await getChildFolders(folderId);
+  const { databases, storage } = await createAdminClient();
+
+  // 🔒 HARD GUARD (cannot be bypassed)
+  const folder = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    folderId,
+  );
+
+  if (folder.isSystem === true) {
+    throw new Error("System folders cannot be deleted");
+  }
+
+  // 1. Delete all files in this folder
+  const filesInFolder = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.filesCollectionId,
+    [Query.equal("folderId", folderId)],
+  );
+
+  for (const file of filesInFolder.documents) {
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      file.$id,
+    );
+
+    if (file.bucketFile) {
+      await storage.deleteFile(appwriteConfig.bucketId, file.bucketFile);
+    }
+  }
+
+  // 2. Recursively delete child folders
+  const children = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [Query.equal("parentFolderId", folderId)],
+  );
 
   for (const child of children.documents) {
     await deleteFolderRecursively(child.$id);
   }
 
-  const { databases } = await createAdminClient();
+  // 3. Delete this folder
   await databases.deleteDocument(
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
-    folderId
+    folderId,
   );
 };
 
@@ -279,7 +337,7 @@ export const searchFolders = async ({ searchText }: { searchText: string }) => {
   const folders = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
-    queries
+    queries,
   );
 
   return parseStringify(folders);
@@ -317,7 +375,7 @@ export const moveFolderToFolder = async ({
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
       folderId,
-      { parentFolderId: targetFolderId }
+      { parentFolderId: targetFolderId },
     );
 
     revalidatePath(path);
@@ -362,7 +420,7 @@ export const moveFoldersToFolder = async ({
         appwriteConfig.databaseId,
         appwriteConfig.foldersCollectionId,
         folderId,
-        { parentFolderId: targetFolderId }
+        { parentFolderId: targetFolderId },
       );
 
       results.push(updatedFolder);
@@ -380,7 +438,7 @@ export const moveFoldersToFolder = async ({
 ============================ */
 const isFolderDescendant = async (
   ancestorId: string,
-  targetId: string
+  targetId: string,
 ): Promise<boolean> => {
   const { databases } = await createAdminClient();
 
@@ -393,11 +451,197 @@ const isFolderDescendant = async (
     const folderDoc: any = await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
-      currentId
+      currentId,
     );
 
     currentId = folderDoc.parentFolderId || null;
   }
 
   return false;
+};
+
+/* ============================
+   BULK DELETE FOLDERS
+============================ */
+export const deleteFolders = async ({
+  folderIds,
+  path,
+}: {
+  folderIds: string[];
+  path: string;
+}) => {
+  try {
+    const { databases } = await createAdminClient();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("User is not authenticated");
+
+    const folders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [
+        Query.equal("$id", folderIds),
+        Query.equal("accountId", currentUser.accountId),
+      ],
+    );
+
+    const protectedFolders = folders.documents.filter(
+      (f) => f.isSystem === true,
+    );
+
+    if (protectedFolders.length > 0) {
+      throw new Error("Default ieCTD/Drugs folders cannot be deleted");
+    }
+
+    for (const folderId of folderIds) {
+      await deleteFolderRecursively(folderId);
+    }
+
+    revalidatePath(path);
+    return parseStringify({ success: true, count: folderIds.length });
+  } catch (error) {
+    handleError(error, "Failed to delete folders");
+  }
+};
+
+/* ============================
+   CREATE IECTD FOLDER STRUCTURE FOR USER
+============================ */
+export const createEctdStructureForUser = async ({
+  path,
+}: {
+  path: string;
+}) => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  // Check if user already has the ieCTD root folder
+  const { databases } = await createAdminClient();
+  const existingFolders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "ieCTD/Drugs"),
+      Query.isNull("parentFolderId"),
+    ],
+  );
+
+  if (existingFolders.total > 0) {
+    // Structure already exists
+    return parseStringify({
+      status: "exists",
+      folderId: existingFolders.documents[0].$id,
+    });
+  }
+
+  // Create the folder structure recursively
+  const createFolderNodeRecursively = async (
+    node: FolderNode,
+    parentFolderId: string | null,
+  ): Promise<string> => {
+    const folder = await createFolder({
+      name: node.name,
+      parentFolderId,
+      path,
+      isSystem: true,
+    });
+
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        await createFolderNodeRecursively(child, folder.$id);
+      }
+    }
+
+    return folder.$id;
+  };
+
+  const rootFolderId = await createFolderNodeRecursively(
+    IECTD_FOLDER_STRUCTURE,
+    null,
+  );
+
+  revalidatePath(path);
+  return parseStringify({ status: "created", folderId: rootFolderId });
+};
+
+/* ============================
+   GET ALL FOLDERS FOR TREE VIEW
+============================ */
+export const getAllFoldersForTree = async () => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  const folders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.limit(1000), // Adjust as needed
+      Query.orderAsc("name"),
+    ],
+  );
+
+  return parseStringify(folders.documents);
+};
+
+/* ============================
+   FIND OR CREATE FOLDER BY PATH
+   Creates folders along the path if they don't exist
+============================ */
+export const findOrCreateFolderByPath = async ({
+  path: folderPath,
+  currentPath,
+  isSystem,
+}: {
+  path: string[]; // e.g., ["m2", "22-intro"]
+  currentPath: string;
+  isSystem: boolean;
+}): Promise<string> => {
+  const { databases } = await createAdminClient();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  let parentFolderId: string | null = null;
+
+  for (const folderName of folderPath) {
+    // Build query based on parent
+    const parentQuery = parentFolderId
+      ? Query.equal("parentFolderId", parentFolderId)
+      : Query.isNull("parentFolderId");
+
+    // Try to find existing folder with this name under the current parent
+    const existingFolders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [
+        Query.equal("accountId", currentUser.accountId),
+        Query.equal("name", folderName),
+        parentQuery,
+      ],
+    );
+
+    if (existingFolders.total > 0) {
+      // Folder exists, use it
+      parentFolderId = existingFolders.documents[0].$id as string;
+    } else {
+      // Create the folder
+      const newFolder = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.foldersCollectionId,
+        ID.unique(),
+        {
+          name: folderName,
+          parentFolderId: parentFolderId,
+          owner: currentUser.$id,
+          accountId: currentUser.accountId,
+          isSystem: false,
+        },
+      );
+      parentFolderId = newFolder.$id as string;
+    }
+  }
+
+  revalidatePath(currentPath);
+  return parentFolderId!;
 };

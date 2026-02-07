@@ -14,7 +14,7 @@ const getUserByEmail = async (email: string) => {
   const result = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.usersCollectionId,
-    [Query.equal("email", [email])]
+    [Query.equal("email", [email])],
   );
 
   return result.total > 0 ? result.documents[0] : null;
@@ -62,11 +62,13 @@ export const createAccount = async ({
         email,
         avatar: avatarPlaceholderUrl,
         accountId,
-      }
+      },
     );
+
+    return parseStringify({ accountId, isNewUser: true });
   }
 
-  return parseStringify({ accountId });
+  return parseStringify({ accountId, isNewUser: false });
 };
 
 export const verifySecret = async ({
@@ -88,6 +90,9 @@ export const verifySecret = async ({
       secure: true,
     });
 
+    const { createEctdStructureForUser } = await import("./folder.actions");
+    await createEctdStructureForUser({ path: "/documents" });
+
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
     handleError(error, "Failed to verify secret");
@@ -103,7 +108,7 @@ export const getCurrentUser = async () => {
     const user = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
-      [Query.equal("accountId", result.$id)]
+      [Query.equal("accountId", result.$id)],
     );
     if (user.total <= 0) return null;
 

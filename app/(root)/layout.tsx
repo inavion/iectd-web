@@ -1,10 +1,10 @@
-import Header from "@/components/Header";
-import MobileNavigation from "@/components/MobileNagivation";
-import Sidebar from "@/components/Sidebar";
+import Header from "@/components/layout/Header";
+import MobileNavigation from "@/components/layout/MobileNagivation";
+import Sidebar from "@/components/layout/Sidebar";
 import { getCurrentUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
-import DragWrapper from "@/components/DragWrapper";
+import DragWrapper from "@/components/drag-drop/DragWrapper";
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
   const currentUser = await getCurrentUser();

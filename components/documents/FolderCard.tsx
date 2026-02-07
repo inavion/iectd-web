@@ -3,23 +3,28 @@
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import FolderDropdown from "@/components/FolderDropdown";
-import FormattedDateTime from "@/components/FormattedDateTime";
-import { moveFileToFolder, moveFilesToFolder } from "@/lib/actions/file.actions";
-import { moveFolderToFolder, moveFoldersToFolder } from "@/lib/actions/folder.actions";
+import {
+  moveFileToFolder,
+  moveFilesToFolder,
+} from "@/lib/actions/file.actions";
+import {
+  moveFolderToFolder,
+  moveFoldersToFolder,
+} from "@/lib/actions/folder.actions";
 import { toast } from "sonner";
-import { DraggedItem } from "@/components/DragContext";
+import { DraggedItem } from "@/components/drag-drop/DragContext";
 
-interface FolderRowProps {
+interface FolderCardProps {
   folder: any;
   isSelected: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
   onMouseUp: (e: React.MouseEvent) => void;
   draggedItems: DraggedItem[];
   isDropTarget: boolean;
-  setHoveredFolderId: (id: string | null) => void;
+  setHoveredFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const FolderRow = ({
+const FolderCard = ({
   folder,
   isSelected,
   onMouseDown,
@@ -27,12 +32,14 @@ const FolderRow = ({
   draggedItems,
   isDropTarget,
   setHoveredFolderId,
-}: FolderRowProps) => {
+}: FolderCardProps) => {
   const router = useRouter();
   const path = usePathname();
 
   // Check if this folder is a valid drop target (not dropping onto self)
-  const canDrop = draggedItems.length > 0 && !draggedItems.some((item) => item.id === folder.$id);
+  const canDrop =
+    draggedItems.length > 0 &&
+    !draggedItems.some((item) => item.id === folder.$id);
 
   const handleMouseUp = async (e: React.MouseEvent) => {
     // Handle drop if items are being dragged
@@ -41,8 +48,12 @@ const FolderRow = ({
       const validItems = draggedItems.filter((item) => item.id !== folder.$id);
       if (validItems.length > 0) {
         try {
-          const fileIds = validItems.filter((item) => item.type === "file").map((item) => item.id);
-          const folderIds = validItems.filter((item) => item.type === "folder").map((item) => item.id);
+          const fileIds = validItems
+            .filter((item) => item.type === "file")
+            .map((item) => item.id);
+          const folderIds = validItems
+            .filter((item) => item.type === "folder")
+            .map((item) => item.id);
 
           // Move files
           if (fileIds.length > 0) {
@@ -92,13 +103,23 @@ const FolderRow = ({
         return;
       }
     }
-    
+
     // No drag - handle selection deselect
     onMouseUp(e);
   };
 
   return (
     <div
+      className={`
+        folder-card
+        cursor-pointer
+        flex items-start justify-between
+        px-4 py-3
+        transition-colors duration-150 ease-in-out
+        ${isDropTarget && canDrop ? "bg-blue-100 ring-2 ring-blue-400" : ""}
+        ${isSelected && !isDropTarget ? "bg-brand-100/20" : ""}
+        ${!isSelected && !isDropTarget ? "bg-white hover:bg-gray-100" : ""}
+      `}
       onMouseDown={(e) => {
         e.stopPropagation();
         onMouseDown(e);
@@ -111,38 +132,25 @@ const FolderRow = ({
       }}
       onMouseUp={handleMouseUp}
       onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
-      className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
-        transition-colors duration-150 ease-in-out
-        ${isDropTarget && canDrop ? "bg-blue-100 ring-2 ring-blue-400" : ""}
-        ${isSelected && !isDropTarget ? "bg-brand-100/20" : ""}
-        ${!isSelected && !isDropTarget ? "hover:bg-gray-100" : ""}
-      `}
     >
-      <div className="col-span-5 ml-2 flex items-center gap-2 min-w-0 !mx-5">
+      <div className="flex items-start min-w-0">
         <Image
           src="/assets/icons/folder.png"
           alt="folder"
-          width={20}
-          height={20}
-          className="w-8 h-8"
+          width={34}
+          height={34}
+          className="shrink-0"
         />
-        <p className="truncate !ml-2">{folder.name}</p>
+
+        <div className="ml-3 flex items-center min-h-[34px]">
+          <p className="font-medium text-sm leading-tight break-words">
+            {folder.name}
+          </p>
+        </div>
       </div>
-
-      <FormattedDateTime
-        date={folder.$createdAt}
-        className="col-span-4 body-2 text-light-100"
-      />
-
-      <p className="col-span-2 text-light-200">—</p>
-
-      <div className="ml-auto mr-2">
-        <FolderDropdown folder={folder} />
-      </div>
-
-      <div className="divider col-span-12 mt-2" />
+      <FolderDropdown folder={folder} />
     </div>
   );
 };
 
-export default FolderRow;
+export default FolderCard;

@@ -1,6 +1,6 @@
 "use client";
 
-import { DragProvider, useDrag } from "@/components/DragContext";
+import { DragProvider, useDrag } from "@/components/drag-drop/DragContext";
 import Thumbnail from "@/components/Thumbnail";
 
 function DragGhost() {
@@ -47,7 +47,11 @@ function DragGhost() {
   );
 }
 
-export default function DragWrapper({ children }: { children: React.ReactNode }) {
+export default function DragWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <DragProvider>
       {children}
