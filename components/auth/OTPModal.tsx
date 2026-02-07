@@ -67,6 +67,7 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
 
     setIsLoading(false);
   };
+  
 
   // Handle Enter key press
   const handleKeyDown = (e: React.KeyboardEvent) => {

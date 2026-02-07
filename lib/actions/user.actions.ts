@@ -86,8 +86,8 @@ export const verifySecret = async ({
     (await cookies()).set("appwrite-session", session.secret, {
       path: "/",
       httpOnly: true,
-      sameSite: true,
-      secure: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     });
 
     const { createEctdStructureForUser } = await import("./folder.actions");
