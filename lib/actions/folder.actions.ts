@@ -87,22 +87,26 @@ export const getFoldersByParent = async ({
     );
 
     // ✅ POPULATE OWNER HERE
-    const foldersWithOwners = await Promise.all(
-      folders.documents.map(async (folder) => {
-        if (!folder.owner) return folder;
+    const ownerIds = [
+      ...new Set(folders.documents.map((f) => f.owner).filter(Boolean)),
+    ];
 
-        const ownerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.usersCollectionId,
-          folder.owner,
-        );
+    // 2. Fetch all owners in ONE query
+    let ownersMap: Record<string, any> = {};
+    if (ownerIds.length > 0) {
+      const owners = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.usersCollectionId,
+        [Query.equal("$id", ownerIds)],
+      );
+      ownersMap = Object.fromEntries(owners.documents.map((o) => [o.$id, o]));
+    }
 
-        return {
-          ...folder,
-          owner: ownerDoc,
-        };
-      }),
-    );
+    // 3. Map owners to folders (no extra queries!)
+    const foldersWithOwners = folders.documents.map((folder) => ({
+      ...folder,
+      owner: folder.owner ? ownersMap[folder.owner] : null,
+    }));
 
     return parseStringify({
       ...folders,
