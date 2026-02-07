@@ -218,6 +218,7 @@ const CreateNew = ({
       const folderId = await findOrCreateFolderByPath({
         path: fullPath,
         currentPath,
+        isSystem: false,
       });
 
       router.push(`/folders/${folderId}`);
@@ -235,6 +236,7 @@ const CreateNew = ({
       name: folderName,
       parentFolderId,
       path: currentPath,
+      isSystem: false,
     });
 
     setIsLoading(false);

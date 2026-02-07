@@ -32,6 +32,7 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
       type: "folder" as const,
       name: f.name,
       data: f,
+      isSystem: f.isSystem,
     }));
     const fileItems = files.map((f) => ({
       id: f.$id,
@@ -55,6 +56,7 @@ const ListLayout = ({ folders, files }: ListLayoutProps) => {
         type: item.type,
         name: item.name,
         bucketFileId: item.type === "file" ? item.bucketFileId : undefined,
+        isSystem:item.type === "folder" ? item.isSystem : undefined,
       }));
   }, [allItems, selectedIds]);
 

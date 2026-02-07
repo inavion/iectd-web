@@ -22,6 +22,7 @@ interface SelectedItem {
   type: "file" | "folder";
   name: string;
   bucketFileId?: string;
+  isSystem?: boolean;
 }
 
 interface SelectionActionsProps {
@@ -36,6 +37,10 @@ const SelectionActions = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const path = usePathname();
+
+  const hasSystemFolder = selectedItems.some(
+    (item) => item.type === "folder" && item.isSystem === true,
+  );
 
   // Don't return null if modal is open or deleting - keep component mounted
   const showToolbar = selectedItems.length > 0;
@@ -70,16 +75,12 @@ const SelectionActions = ({
 
       const templateFolderNames = getAllTemplateFolderNames();
       const folderIds = selectedItems
-        .filter(
-          (item) =>
-            item.type === "folder" && !templateFolderNames.includes(item.name),
-        )
+        .filter((item) => item.type === "folder" && item.isSystem !== true)
         .map((item) => item.id);
 
       // Count protected folders that were skipped
       const protectedCount = selectedItems.filter(
-        (item) =>
-          item.type === "folder" && templateFolderNames.includes(item.name),
+        (item) => item.type === "folder" && item.isSystem === true,
       ).length;
 
       if (protectedCount > 0) {
@@ -117,21 +118,25 @@ const SelectionActions = ({
 
           <div className="h-4 w-px bg-gray-300" />
 
-          <button
-            onClick={() => setIsDeleteModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
-          >
-            <Image
-              src="/assets/icons/delete.svg"
-              alt="delete"
-              width={16}
-              height={16}
-              className="opacity-70"
-            />
-            Delete
-          </button>
-
-          <div className="h-4 w-px bg-gray-300" />
+          {!hasSystemFolder && (
+            <>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              >
+                <Image
+                  src="/assets/icons/delete.svg"
+                  alt="delete"
+                  width={16}
+                  height={16}
+                  className="opacity-70"
+                />
+                Delete
+              </button>
+              
+              <div className="h-4 w-px bg-gray-300" />
+            </>
+          )}
 
           <button
             onClick={onClearSelection}
@@ -142,7 +147,7 @@ const SelectionActions = ({
               alt="clear"
               width={14}
               height={14}
-              className="opacity-70"
+              className="opacity-70 invert"
             />
             Clear
           </button>
