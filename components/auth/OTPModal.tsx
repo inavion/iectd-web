@@ -41,28 +41,47 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
     e.preventDefault();
     if (otp.length !== 6) return; // Don't submit if OTP is incomplete
 
+    console.log("[OTP Modal] Starting OTP verification", {
+      accountId,
+      email,
+      otpLength: otp.length,
+    });
+
     setIsLoading(true);
 
     try {
       // 1. Verify OTP with Appwrite (this also creates eCTD folder structure)
       setIsSettingUp(true);
+      console.log("[OTP Modal] Calling verifySecret...");
       const sessionId = await verifySecret({ accountId, password: otp });
+      console.log("[OTP Modal] verifySecret response:", sessionId);
 
       if (sessionId) {
         // 2. Login with new backend API to get JWT tokens
+        console.log("[OTP Modal] Calling backend loginUser...");
         try {
-          await loginUser({ email, password });
+          const loginResult = await loginUser({ email, password });
+          console.log("[OTP Modal] Backend login successful:", loginResult);
         } catch (error) {
           // If backend login fails, still continue since Appwrite auth succeeded
-          console.log("Backend login:", error);
+          console.error("[OTP Modal] Backend login failed (continuing anyway):", error);
         }
 
         // 3. Redirect to dashboard
+        console.log("[OTP Modal] Redirecting to dashboard...");
         router.push("/");
+      } else {
+        console.error("[OTP Modal] No sessionId returned from verifySecret");
+        throw new Error("Verification failed - no session ID returned");
       }
     } catch (error) {
-      console.error("Failed to verify OTP", error);
+      console.error("[OTP Modal] Failed to verify OTP", {
+        error,
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
       setIsSettingUp(false);
+      alert("Failed to verify OTP. Please try again or request a new code.");
     }
 
     setIsLoading(false);
