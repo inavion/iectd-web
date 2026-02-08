@@ -87,11 +87,11 @@ export const verifySecret = async ({
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
     });
 
-    const { createEctdStructureForUser } = await import("./folder.actions");
-    await createEctdStructureForUser({ path: "/documents" });
+    // const { createEctdStructureForUser } = await import("./folder.actions");
+    // await createEctdStructureForUser({ path: "/documents" });
 
     return parseStringify({ sessionId: session.$id });
   } catch (error) {

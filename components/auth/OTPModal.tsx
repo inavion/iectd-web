@@ -21,6 +21,7 @@ import { Button } from "../ui/button";
 import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
 import { loginUser } from "@/lib/actions/auth.actions";
 import { useRouter } from "next/navigation";
+import { createEctdStructureForUser } from "@/lib/actions/folder.actions";
 
 interface OTPModalProps {
   accountId: string;
@@ -50,43 +51,32 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
     setIsLoading(true);
 
     try {
-      // 1. Verify OTP with Appwrite (this also creates eCTD folder structure)
       setIsSettingUp(true);
-      console.log("[OTP Modal] Calling verifySecret...");
+
+      // 1. Verify OTP (now fast, no folder creation)
       const sessionId = await verifySecret({ accountId, password: otp });
-      console.log("[OTP Modal] verifySecret response:", sessionId);
 
       if (sessionId) {
-        // 2. Login with new backend API to get JWT tokens
-        console.log("[OTP Modal] Calling backend loginUser...");
+        // 2. Create folder structure (modal stays open with 2-min warning)
+        await createEctdStructureForUser({ path: "/documents" });
+
+        // 3. Backend login
         try {
-          const loginResult = await loginUser({ email, password });
-          console.log("[OTP Modal] Backend login successful:", loginResult);
+          await loginUser({ email, password });
         } catch (error) {
-          // If backend login fails, still continue since Appwrite auth succeeded
-          console.error("[OTP Modal] Backend login failed (continuing anyway):", error);
+          console.log("Backend login:", error);
         }
 
-        // 3. Redirect to dashboard
-        console.log("[OTP Modal] Redirecting to dashboard...");
+        // 4. Redirect
         router.push("/");
-      } else {
-        console.error("[OTP Modal] No sessionId returned from verifySecret");
-        throw new Error("Verification failed - no session ID returned");
       }
     } catch (error) {
-      console.error("[OTP Modal] Failed to verify OTP", {
-        error,
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
+      console.error("Failed to verify OTP", error);
       setIsSettingUp(false);
-      alert("Failed to verify OTP. Please try again or request a new code.");
     }
 
     setIsLoading(false);
   };
-  
 
   // Handle Enter key press
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -100,7 +90,10 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={isSettingUp ? undefined : setIsOpen}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={isSettingUp ? undefined : setIsOpen}
+    >
       <AlertDialogContent className="shad-alert-dialog">
         {isSettingUp ? (
           // Setting up account view
@@ -117,7 +110,8 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
             <div className="text-center space-y-2">
               <h3 className="h3 text-light-100">Setting up your account</h3>
               <p className="subtitle-2 text-light-100/70">
-                This may take up to 2 minutes depending on your internet connection.
+                This may take up to 2 minutes depending on your internet
+                connection.
               </p>
               <p className="text-sm text-light-100/50 mt-4">
                 Please don&apos;t close this window...
