@@ -16,6 +16,7 @@ import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
 import Link from "next/link";
 import Image from "next/image";
+import Phase2LoadingBanner from "@/components/Phase2LoadingBanner";
 
 async function buildBreadcrumbPath(
   folderId: string | null,
@@ -101,6 +102,7 @@ const Page = async ({ searchParams }: SearchParamProps) => {
 
   return (
     <div className="page-container">
+      <Phase2LoadingBanner />
       <section className="w-full">
         <div className="h1 capitalize flex items-center gap-2 flex-wrap">
           {searchId ? (

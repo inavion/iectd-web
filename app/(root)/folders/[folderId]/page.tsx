@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/documents/ListLayout";
 import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
+import Phase2LoadingBanner from "@/components/Phase2LoadingBanner";
 
 const FolderPage = async ({
   params,
@@ -36,6 +37,7 @@ const FolderPage = async ({
 
   return (
     <div className="page-container">
+      <Phase2LoadingBanner />
       {/* Breadcrumbs */}
       <div className="flex items-center justify-between w-full">
         <Breadcrumbs />

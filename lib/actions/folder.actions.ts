@@ -8,8 +8,11 @@ import { parseStringify } from "../utils";
 import { revalidatePath } from "next/cache";
 import { FolderTemplateNode } from "@/templates/Guidance-for-Industry/fda-module2";
 import { FDA_GUIDANCE_FOR_INDUSTRY_TEMPLATE } from "@/templates/Guidance-for-Industry/fda-guidance-for-industry";
+import { IECTD_FOLDER_STRUCTURE } from "@/components/templates/iectd-folder-structure";
+
 import {
-  IECTD_FOLDER_STRUCTURE,
+  IECTD_PHASE1_STRUCTURE,
+  IECTD_PHASE2_MODULES,
   FolderNode,
 } from "@/components/templates/iectd-folder-structure";
 
@@ -644,4 +647,220 @@ export const findOrCreateFolderByPath = async ({
 
   revalidatePath(currentPath);
   return parentFolderId!;
+};
+
+export const createEctdPhase1 = async ({ path }: { path: string }) => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  const { databases } = await createAdminClient();
+
+  // Check if root already exists
+  const existing = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "ieCTD/Drugs"),
+      Query.isNull("parentFolderId"),
+    ],
+  );
+
+  if (existing.total > 0) {
+    return parseStringify({
+      status: "exists",
+      folderId: existing.documents[0].$id,
+    });
+  }
+
+  // Create Phase 1 structure
+  const createNodeRecursively = async (
+    node: FolderNode,
+    parentFolderId: string | null,
+  ): Promise<string> => {
+    const folder = await createFolder({
+      name: node.name,
+      parentFolderId,
+      path,
+      isSystem: true,
+    });
+
+    if (node.children) {
+      for (const child of node.children) {
+        await createNodeRecursively(child, folder.$id);
+      }
+    }
+
+    return folder.$id;
+  };
+
+  const rootFolderId = await createNodeRecursively(
+    IECTD_PHASE1_STRUCTURE,
+    null,
+  );
+
+  revalidatePath(path);
+  return parseStringify({ status: "created", folderId: rootFolderId });
+};
+
+// Create Phase 2: m3, m4, m5 (background, after sign-in)
+// Create Phase 2: m3, m4, m5 (background, after sign-in)
+export const createEctdPhase2 = async ({ path }: { path: string }) => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("User not authenticated");
+
+  const { databases } = await createAdminClient();
+
+  // Find the root folder
+  const rootFolders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "ieCTD/Drugs"),
+      Query.isNull("parentFolderId"),
+    ],
+  );
+
+  if (rootFolders.total === 0) {
+    throw new Error("Root folder not found");
+  }
+
+  const rootFolderId = rootFolders.documents[0].$id;
+
+  // Check which modules already exist under root - SKIP them entirely
+  const existingModules = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("parentFolderId", rootFolderId),
+    ],
+  );
+
+  const existingModuleNames = new Set(
+    existingModules.documents.map((doc) => doc.name),
+  );
+
+  // Filter to only modules that don't exist yet
+  const modulesToCreate = IECTD_PHASE2_MODULES.filter(
+    (name) => !existingModuleNames.has(name),
+  );
+
+  // If all modules exist, skip
+  if (modulesToCreate.length === 0) {
+    return parseStringify({ status: "already_complete" });
+  }
+
+  // Get full structure for modules to create
+  const fullStructure = IECTD_FOLDER_STRUCTURE;
+  const phase2Modules =
+    fullStructure.children?.filter((child) =>
+      modulesToCreate.includes(child.name),
+    ) || [];
+
+  // Create Phase 2 modules (only ones that don't exist)
+  const createNodeRecursively = async (
+    node: FolderNode,
+    parentFolderId: string | null,
+  ): Promise<string> => {
+    // Check if folder already exists
+    const parentQuery = parentFolderId
+      ? Query.equal("parentFolderId", parentFolderId)
+      : Query.isNull("parentFolderId");
+
+    const existing = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [
+        Query.equal("accountId", currentUser.accountId),
+        Query.equal("name", node.name),
+        parentQuery,
+      ],
+    );
+
+    let folderId: string;
+
+    if (existing.total > 0) {
+      // Folder exists, use it (don't create duplicate)
+      folderId = existing.documents[0].$id;
+    } else {
+      // Create the folder
+      const folder = await createFolder({
+        name: node.name,
+        parentFolderId,
+        path,
+        isSystem: true,
+      });
+      folderId = folder.$id;
+    }
+
+    // Create children
+    if (node.children) {
+      for (const child of node.children) {
+        await createNodeRecursively(child, folderId);
+      }
+    }
+
+    return folderId;
+  };
+
+  // Create each module under root
+  for (const module of phase2Modules) {
+    await createNodeRecursively(module, rootFolderId);
+  }
+
+  revalidatePath(path);
+  return parseStringify({ status: "completed" });
+};
+
+// Check if Phase 2 is complete
+export const isPhase2Complete = async (): Promise<boolean> => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return false;
+
+  const { databases } = await createAdminClient();
+
+  // Find root folder
+  const rootFolders = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "ieCTD/Drugs"),
+      Query.isNull("parentFolderId"),
+    ],
+  );
+
+  if (rootFolders.total === 0) return false;
+
+  const rootFolderId = rootFolders.documents[0].$id;
+
+  // Check if m5 exists
+  const m5 = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "m5"),
+      Query.equal("parentFolderId", rootFolderId),
+    ],
+  );
+
+  if (m5.total === 0) return false;
+
+  const m5FolderId = m5.documents[0].$id;
+
+  // Check if the LAST child of m5 exists (e.g., "5-tox")
+  const lastChild = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.foldersCollectionId,
+    [
+      Query.equal("accountId", currentUser.accountId),
+      Query.equal("name", "5-tox"),  // Last child folder in m5
+      Query.equal("parentFolderId", m5FolderId),
+    ],
+  );
+
+  return lastChild.total > 0;
 };

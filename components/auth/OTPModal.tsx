@@ -11,6 +11,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
+  createEctdPhase1,
+  createEctdPhase2,
+} from "@/lib/actions/folder.actions";
+
+import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
@@ -51,28 +56,42 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
     setIsLoading(true);
 
     try {
+      // 1. Verify OTP with Appwrite (this also creates eCTD folder structure)
       setIsSettingUp(true);
-
-      // 1. Verify OTP (now fast, no folder creation)
+      console.log("[OTP Modal] Calling verifySecret...");
       const sessionId = await verifySecret({ accountId, password: otp });
+      console.log("[OTP Modal] verifySecret response:", sessionId);
 
       if (sessionId) {
-        // 2. Create folder structure (modal stays open with 2-min warning)
-        await createEctdStructureForUser({ path: "/documents" });
-
-        // 3. Backend login
+        // 2. Backend login
         try {
           await loginUser({ email, password });
         } catch (error) {
           console.log("Backend login:", error);
         }
 
-        // 4. Redirect
+        // 3. Create Phase 1 folders (fast - root + m1 + m2)
+        console.log("[OTP Modal] Creating Phase 1 folders...");
+        await createEctdPhase1({ path: "/documents" });
+
+        // 4. Start Phase 2 in background (m3, m4, m5 - no await)
+        console.log("[OTP Modal] Starting Phase 2 in background...");
+        createEctdPhase2({ path: "/documents" }).catch(console.error);
+
+        // 5. Redirect
         router.push("/");
+      } else {
+        console.error("[OTP Modal] No sessionId returned from verifySecret");
+        throw new Error("Verification failed - no session ID returned");
       }
     } catch (error) {
-      console.error("Failed to verify OTP", error);
+      console.error("[OTP Modal] Failed to verify OTP", {
+        error,
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
       setIsSettingUp(false);
+      alert("Failed to verify OTP. Please try again or request a new code.");
     }
 
     setIsLoading(false);

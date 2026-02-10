@@ -322,3 +322,25 @@ export const getAllTemplateFolderNames = (): string[] => {
   
   return names;
 };
+
+
+// Phase 1: Root + m1 + m2 (created during sign-up)
+export const IECTD_PHASE1_STRUCTURE: FolderNode = {
+  name: "ieCTD/Drugs",
+  children: [
+    { name: "m1" },
+    {
+      name: "m2",
+      children: [
+        { name: "22-intro" },
+        { name: "23-qos" },
+        { name: "24-nonclin-over" },
+        { name: "25-clin-over" },
+        { name: "26-nonclin-sum" },
+        { name: "27-clin-sum" },
+      ],
+    },
+  ],
+};
+
+export const IECTD_PHASE2_MODULES = ["m3", "m4", "m5"];
