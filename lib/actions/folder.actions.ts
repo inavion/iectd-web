@@ -816,51 +816,26 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
 
 // Check if Phase 2 is complete
 export const isPhase2Complete = async (): Promise<boolean> => {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) return false;
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return false;
 
-  const { databases } = await createAdminClient();
+    const { databases } = await createAdminClient();
 
-  // Find root folder
-  const rootFolders = await databases.listDocuments(
-    appwriteConfig.databaseId,
-    appwriteConfig.foldersCollectionId,
-    [
-      Query.equal("accountId", currentUser.accountId),
-      Query.equal("name", "ieCTD/Drugs"),
-      Query.isNull("parentFolderId"),
-    ],
-  );
+    // Just check if root folder exists
+    const rootFolders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [
+        Query.equal("accountId", currentUser.accountId),
+        Query.equal("name", "ieCTD/Drugs"),
+        Query.isNull("parentFolderId"),
+      ],
+    );
 
-  if (rootFolders.total === 0) return false;
-
-  const rootFolderId = rootFolders.documents[0].$id;
-
-  // Check if m5 exists
-  const m5 = await databases.listDocuments(
-    appwriteConfig.databaseId,
-    appwriteConfig.foldersCollectionId,
-    [
-      Query.equal("accountId", currentUser.accountId),
-      Query.equal("name", "m5"),
-      Query.equal("parentFolderId", rootFolderId),
-    ],
-  );
-
-  if (m5.total === 0) return false;
-
-  const m5FolderId = m5.documents[0].$id;
-
-  // Check if the LAST child of m5 exists (e.g., "5-tox")
-  const lastChild = await databases.listDocuments(
-    appwriteConfig.databaseId,
-    appwriteConfig.foldersCollectionId,
-    [
-      Query.equal("accountId", currentUser.accountId),
-      Query.equal("name", "54-lit-ref"), // Last child folder in m5
-      Query.equal("parentFolderId", m5FolderId),
-    ],
-  );
-
-  return lastChild.total > 0;
+    return rootFolders.total > 0;
+  } catch (error) {
+    console.error("isPhase2Complete error:", error);
+    return false;
+  }
 };

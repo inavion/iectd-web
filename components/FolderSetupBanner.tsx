@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -11,78 +11,73 @@ import {
 
 const FolderSetupBanner = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isComplete, setIsComplete] = useState(false);
-  const [status, setStatus] = useState("Checking folder structure...");
-  const hasStarted = useRef(false);
+  // Start HIDDEN - only show if we need to create folders
+  const [isVisible, setIsVisible] = useState(false);
+  const [status, setStatus] = useState("Setting up folder structure...");
 
   useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
+    // Check if we already completed setup (stored in localStorage)
+    const setupComplete = localStorage.getItem("folder_setup_complete");
+    if (setupComplete === "true") {
+      return; // Don't do anything, stay hidden
+    }
 
     let isCancelled = false;
 
     const setupFolders = async () => {
-      // Check localStorage lock first
-      const isCreating = localStorage.getItem("folders_creating");
-      if (isCreating === "true") {
-        // Another tab is already creating, poll for completion
-        const pollInterval = setInterval(async () => {
-          const complete = await isPhase2Complete();
-          if (complete && !isCancelled) {
-            setIsComplete(true);
-            setIsLoading(false);
-            clearInterval(pollInterval);
-            router.refresh();
-          }
-        }, 3000);
-        return;
-      }
-
       try {
-        // Check if already complete
+        // Check if already complete on server
         const complete = await isPhase2Complete();
+
         if (isCancelled) return;
 
         if (complete) {
-          setIsComplete(true);
-          setIsLoading(false);
-          return;
+          // Mark as complete in localStorage so we never check again
+          localStorage.setItem("folder_setup_complete", "true");
+          return; // Stay hidden
         }
 
-        // Set lock
-        localStorage.setItem("folders_creating", "true");
+        // Folders don't exist - NOW show the banner
+        setIsVisible(true);
 
-        // Phase 1: Create root + m1 + m2
+        // Create folders
         setStatus("Creating base folder structure (MODULE 1, 2)...");
         await createEctdPhase1({ path: "/documents" });
 
         if (isCancelled) return;
 
-        // Phase 2: Create m3 + m4 + m5
         setStatus("Creating remaining folders (MODULE 3, 4, 5)...");
         await createEctdPhase2({ path: "/documents" });
 
         if (!isCancelled) {
-          setIsComplete(true);
+          // Mark as complete
+          localStorage.setItem("folder_setup_complete", "true");
+          setIsVisible(false);
           router.refresh();
         }
       } catch (error) {
         console.error("Folder setup failed:", error);
-      } finally {
-        localStorage.removeItem("folders_creating");
-        if (!isCancelled) setIsLoading(false);
+        setIsVisible(false);
       }
     };
 
     setupFolders();
 
+    // Safety timeout
+    const timeout = setTimeout(() => {
+      if (!isCancelled) {
+        localStorage.setItem("folder_setup_complete", "true");
+        setIsVisible(false);
+      }
+    }, 2 * 60 * 1000);
+
     return () => {
       isCancelled = true;
+      clearTimeout(timeout);
     };
   }, [router]);
 
-  if (isComplete || !isLoading) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center gap-3">
@@ -93,7 +88,7 @@ const FolderSetupBanner = () => {
         height={20}
         className="animate-spin invert"
       />
-      <span className="text-sm text-blue-700">{status}</span>
+      <span className="text-sm text-brand">{status}</span>
     </div>
   );
 };
