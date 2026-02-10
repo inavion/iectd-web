@@ -857,7 +857,7 @@ export const isPhase2Complete = async (): Promise<boolean> => {
     appwriteConfig.foldersCollectionId,
     [
       Query.equal("accountId", currentUser.accountId),
-      Query.equal("name", "5-tox"),  // Last child folder in m5
+      Query.equal("name", "54-lit-ref"), // Last child folder in m5
       Query.equal("parentFolderId", m5FolderId),
     ],
   );

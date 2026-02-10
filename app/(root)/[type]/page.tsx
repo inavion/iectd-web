@@ -16,7 +16,7 @@ import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
 import Link from "next/link";
 import Image from "next/image";
-import Phase2LoadingBanner from "@/components/Phase2LoadingBanner";
+import Phase2LoadingBanner from "@/components/FolderSetupBanner";
 
 async function buildBreadcrumbPath(
   folderId: string | null,

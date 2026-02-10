@@ -8,7 +8,7 @@ import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/documents/ListLayout";
 import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
-import Phase2LoadingBanner from "@/components/Phase2LoadingBanner";
+import Phase2LoadingBanner from "@/components/FolderSetupBanner";
 
 const FolderPage = async ({
   params,
