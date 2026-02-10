@@ -11,69 +11,84 @@ import {
 
 const FolderSetupBanner = () => {
   const router = useRouter();
-  // Start HIDDEN - only show if we need to create folders
   const [isVisible, setIsVisible] = useState(false);
-  const [status, setStatus] = useState("Setting up folder structure...");
+  const [status, setStatus] = useState("Checking folder structure...");
 
   useEffect(() => {
-    // Check if we already completed setup (stored in localStorage)
-    const setupComplete = localStorage.getItem("folder_setup_complete");
-    if (setupComplete === "true") {
-      return; // Don't do anything, stay hidden
-    }
-
     let isCancelled = false;
 
     const setupFolders = async () => {
+      // Check if setup is already complete
+      const setupComplete = localStorage.getItem("folder_setup_complete");
+      if (setupComplete === "true") {
+        // Double-check with server
+        const serverComplete = await isPhase2Complete();
+        if (serverComplete) {
+          console.log("[FolderSetup] ✅ All folders already exist");
+          return;
+        } else {
+          // Server says not complete, clear localStorage and continue
+          localStorage.removeItem("folder_setup_complete");
+        }
+      }
+
+      // Check if currently in progress (from another navigation)
+      const inProgress = localStorage.getItem("folder_setup_in_progress");
+      
       try {
-        // Check if already complete on server
+        // Check server status
+        console.log("[FolderSetup] Checking if folders exist...");
         const complete = await isPhase2Complete();
 
         if (isCancelled) return;
 
         if (complete) {
-          // Mark as complete in localStorage so we never check again
+          console.log("[FolderSetup] ✅ All folders already exist on server");
           localStorage.setItem("folder_setup_complete", "true");
-          return; // Stay hidden
+          localStorage.removeItem("folder_setup_in_progress");
+          return;
         }
 
-        // Folders don't exist - NOW show the banner
+        // Not complete - show banner and create folders
         setIsVisible(true);
+        localStorage.setItem("folder_setup_in_progress", "true");
 
-        // Create folders
-        setStatus("Creating base folder structure (MODULE 1, 2)...");
+        // Phase 1
+        console.log("[FolderSetup] 🚀 Starting Phase 1 (root + m1 + m2)...");
+        setStatus("Creating MODULE 1 & 2...");
         await createEctdPhase1({ path: "/documents" });
+        console.log("[FolderSetup] ✅ Phase 1 complete");
 
-        if (isCancelled) return;
+        if (isCancelled) {
+          console.log("[FolderSetup] ⚠️ Cancelled during Phase 1, will resume on next mount");
+          return;
+        }
 
-        setStatus("Creating remaining folders (MODULE 3, 4, 5)...");
+        // Phase 2
+        console.log("[FolderSetup] 🚀 Starting Phase 2 (m3 + m4 + m5)...");
+        setStatus("Creating MODULE 3, 4, 5...");
         await createEctdPhase2({ path: "/documents" });
+        console.log("[FolderSetup] ✅ Phase 2 complete");
 
         if (!isCancelled) {
-          // Mark as complete
+          console.log("[FolderSetup] 🎉 All folders created successfully!");
           localStorage.setItem("folder_setup_complete", "true");
+          localStorage.removeItem("folder_setup_in_progress");
           setIsVisible(false);
           router.refresh();
         }
       } catch (error) {
-        console.error("Folder setup failed:", error);
+        console.error("[FolderSetup] ❌ Error:", error);
+        // Don't mark as complete on error - will retry on next mount
+        localStorage.removeItem("folder_setup_in_progress");
         setIsVisible(false);
       }
     };
 
     setupFolders();
 
-    // Safety timeout
-    const timeout = setTimeout(() => {
-      if (!isCancelled) {
-        localStorage.setItem("folder_setup_complete", "true");
-        setIsVisible(false);
-      }
-    }, 2 * 60 * 1000);
-
     return () => {
       isCancelled = true;
-      clearTimeout(timeout);
     };
   }, [router]);
 

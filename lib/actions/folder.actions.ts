@@ -685,6 +685,8 @@ export const createEctdPhase1 = async ({ path }: { path: string }) => {
       isSystem: true,
     });
 
+    console.log(`[Phase1] ✅ Created: ${node.name} (ID: ${folder.$id})`);
+
     if (node.children) {
       for (const child of node.children) {
         await createNodeRecursively(child, folder.$id);
@@ -764,6 +766,8 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
     node: FolderNode,
     parentFolderId: string | null,
   ): Promise<string> => {
+    console.log(`[Phase2] Creating folder: ${node.name}`);
+
     // Check if folder already exists
     const parentQuery = parentFolderId
       ? Query.equal("parentFolderId", parentFolderId)
