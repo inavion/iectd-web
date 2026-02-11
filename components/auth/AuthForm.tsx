@@ -73,21 +73,27 @@ const AuthForm = ({ type }: { type: FormType }) => {
         }
 
         // 2. Create account with Appwrite (sends OTP)
-        const user = await createAccount({
+        const result = await createAccount({
           fullName: values.fullName || "",
           email: values.email,
         });
 
-        setAccountId(user.accountId);
+        // Check for error in response
+        if ("error" in result) {
+          setErrorMessage(result.error);
+          return;
+        }
+
+        setAccountId(result.accountId);
       } else {
         // Sign in flow
         // 1. Sign in with Appwrite (sends OTP)
-        const user = await signInUser({ email: values.email });
+        const result = await signInUser({ email: values.email });
 
-        if (user?.accountId) {
-          setAccountId(user.accountId);
+        if (result?.accountId) {
+          setAccountId(result.accountId);
         } else {
-          setErrorMessage("User not found. Please sign up first.");
+          setErrorMessage(result?.error || "User not found. Please sign up first.");
         }
       }
     } catch (error) {

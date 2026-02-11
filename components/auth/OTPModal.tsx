@@ -11,11 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
-  createEctdPhase1,
-  createEctdPhase2,
-} from "@/lib/actions/folder.actions";
-
-import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
@@ -26,7 +21,6 @@ import { Button } from "../ui/button";
 import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
 import { loginUser } from "@/lib/actions/auth.actions";
 import { useRouter } from "next/navigation";
-import { createEctdStructureForUser } from "@/lib/actions/folder.actions";
 
 interface OTPModalProps {
   accountId: string;
@@ -48,28 +42,41 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
     if (otp.length !== 6) return;
 
     setIsLoading(true);
+    setIsSettingUp(true);
 
     try {
-      setIsSettingUp(true);
+      console.log("[OTPModal] Submitting OTP...");
+      console.log("[OTPModal] accountId:", accountId);
+
       const sessionId = await verifySecret({ accountId, password: otp });
 
       if (sessionId) {
+        console.log("[OTPModal] ✅ OTP verified successfully");
+
         // Optional: Backend login (don't block on failure)
         try {
           await loginUser({ email, password });
+          console.log("[OTPModal] ✅ Backend login successful");
         } catch (error) {
-          console.log("Backend login:", error);
+          console.log("[OTPModal] Backend login failed (non-blocking):", error);
         }
 
         // Redirect immediately - folder creation happens on dashboard
-        router.push("/");
+        window.location.href = "/";
       } else {
-        throw new Error("Verification failed");
+        // OTP verification failed - show user-friendly message
+        console.log("[OTPModal] ❌ OTP verification returned null");
+        setIsSettingUp(false);
+        setOtp(""); // Clear the OTP input
+        alert(
+          "Invalid or expired OTP. Please request a new code and try again.",
+        );
       }
     } catch (error) {
-      console.error("Failed to verify OTP", error);
+      console.error("[OTPModal] Unexpected error:", error);
       setIsSettingUp(false);
-      alert("Failed to verify OTP. Please try again.");
+      setOtp("");
+      alert("Something went wrong. Please try again.");
     }
 
     setIsLoading(false);

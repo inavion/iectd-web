@@ -25,15 +25,19 @@ const handleError = (error: unknown, message: string) => {
   throw error;
 };
 
-export const sendEmailOTP = async ({ email }: { email: string }) => {
-  const { account } = await createAdminClient();
-
+export const sendEmailOTP = async ({
+  email,
+}: {
+  email: string;
+}): Promise<string | null> => {
   try {
+    const { account } = await createAdminClient();
     const session = await account.createEmailToken(ID.unique(), email);
-
     return session.userId;
   } catch (error) {
-    handleError(error, "Failed to send email OTP");
+    console.error("[sendEmailOTP] ❌ Failed to send OTP:", error);
+    // Return null instead of throwing to prevent 500 errors
+    return null;
   }
 };
 
@@ -43,32 +47,40 @@ export const createAccount = async ({
 }: {
   fullName: string;
   email: string;
-}) => {
-  const existingUser = await getUserByEmail(email);
+}): Promise<{ accountId: string; isNewUser: boolean } | { error: string }> => {
+  try {
+    const existingUser = await getUserByEmail(email);
 
-  const accountId = await sendEmailOTP({ email });
+    const accountId = await sendEmailOTP({ email });
 
-  if (!accountId) throw new Error("Failed to send email OTP");
+    if (!accountId) {
+      console.error("[createAccount] ❌ Failed to send OTP");
+      return { error: "Failed to send verification email. Please try again." };
+    }
 
-  if (!existingUser) {
-    const { databases } = await createAdminClient();
+    if (!existingUser) {
+      const { databases } = await createAdminClient();
 
-    await databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.usersCollectionId,
-      ID.unique(),
-      {
-        fullName,
-        email,
-        avatar: avatarPlaceholderUrl,
-        accountId,
-      },
-    );
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.usersCollectionId,
+        ID.unique(),
+        {
+          fullName,
+          email,
+          avatar: avatarPlaceholderUrl,
+          accountId,
+        },
+      );
 
-    return parseStringify({ accountId, isNewUser: true });
+      return parseStringify({ accountId, isNewUser: true });
+    }
+
+    return parseStringify({ accountId, isNewUser: false });
+  } catch (error) {
+    console.error("[createAccount] ❌ Error:", error);
+    return { error: "Failed to create account. Please try again." };
   }
-
-  return parseStringify({ accountId, isNewUser: false });
 };
 
 export const verifySecret = async ({
@@ -77,43 +89,75 @@ export const verifySecret = async ({
 }: {
   accountId: string;
   password: string;
-}) => {
+}): Promise<{ sessionId: string } | null> => {
+  console.log("[verifySecret] 🔐 Starting verification...");
+  console.log("[verifySecret] accountId:", accountId);
+  console.log("[verifySecret] password length:", password?.length);
+
   try {
+    console.log("[verifySecret] Creating admin client...");
     const { account } = await createAdminClient();
+    console.log("[verifySecret] ✅ Admin client created");
 
+    console.log("[verifySecret] Creating session with Appwrite...");
     const session = await account.createSession(accountId, password);
+    console.log("[verifySecret] ✅ Session created:", session.$id);
 
+    console.log("[verifySecret] Setting cookie...");
     (await cookies()).set("appwrite-session", session.secret, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
     });
+    console.log("[verifySecret] ✅ Cookie set");
 
-    // const { createEctdStructureForUser } = await import("./folder.actions");
-    // await createEctdStructureForUser({ path: "/documents" });
-
+    console.log("[verifySecret] 🎉 Verification complete!");
     return parseStringify({ sessionId: session.$id });
   } catch (error) {
-    handleError(error, "Failed to verify secret");
+    console.error("[verifySecret] ❌ ERROR:", error);
+
+    // Log Appwrite-specific error details
+    if (error && typeof error === "object" && "code" in error) {
+      const appwriteError = error as {
+        code: number;
+        type: string;
+        message: string;
+      };
+      console.error("[verifySecret] Appwrite error code:", appwriteError.code);
+      console.error("[verifySecret] Appwrite error type:", appwriteError.type);
+
+      // Return null instead of throwing - let the client handle the error
+      // Common errors:
+      // - user_invalid_token: OTP is wrong, expired, or already used
+      // - user_unauthorized: Account doesn't exist
+    }
+
+    // Return null to indicate failure instead of throwing a 500
+    return null;
   }
 };
 
 export const getCurrentUser = async () => {
   try {
+    console.log("[getCurrentUser] Starting...");
     const { databases, account } = await createSessionClient();
+    console.log("[getCurrentUser] Session client created");
 
     const result = await account.get();
+    console.log("[getCurrentUser] Account retrieved:", result.$id);
 
     const user = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
       [Query.equal("accountId", result.$id)],
     );
+    console.log("[getCurrentUser] Query result - total:", user.total);
     if (user.total <= 0) return null;
 
     return parseStringify(user.documents[0]);
   } catch (error) {
+    console.error("[getCurrentUser] ❌ Error:", error);
     return null;
   }
 };
@@ -138,17 +182,32 @@ export const signOutUser = async () => {
   }
 };
 
-export const signInUser = async ({ email }: { email: string }) => {
+export const signInUser = async ({
+  email,
+}: {
+  email: string;
+}): Promise<{ accountId: string | null; error?: string }> => {
   try {
     const existingUser = await getUserByEmail(email);
 
     if (existingUser) {
-      await sendEmailOTP({ email });
-      return parseStringify({ accountId: existingUser.accountId });
+      const otpSent = await sendEmailOTP({ email });
+      if (!otpSent) {
+        console.error("[signInUser] ❌ Failed to send OTP");
+        return parseStringify({
+          accountId: null,
+          error: "Failed to send verification email",
+        });
+      }
+      return parseStringify({ accountId: otpSent });
     }
 
     return parseStringify({ accountId: null, error: "User not found" });
   } catch (error) {
-    handleError(error, "Failed to sign in user");
+    console.error("[signInUser] ❌ Error:", error);
+    return parseStringify({
+      accountId: null,
+      error: "Sign in failed. Please try again.",
+    });
   }
 };

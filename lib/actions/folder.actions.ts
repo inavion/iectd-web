@@ -838,6 +838,7 @@ export const isPhase2Complete = async (): Promise<boolean> => {
     );
 
     return rootFolders.total > 0;
+    
   } catch (error) {
     console.error("isPhase2Complete error:", error);
     return false;
