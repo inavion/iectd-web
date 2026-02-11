@@ -193,13 +193,21 @@ export const signInUser = async ({
     if (existingUser) {
       const otpSent = await sendEmailOTP({ email });
       if (!otpSent) {
-        console.error("[signInUser] ❌ Failed to send OTP");
-        return parseStringify({
-          accountId: null,
-          error: "Failed to send verification email",
-        });
+        return { accountId: null, error: "Failed to send verification email" };
       }
-      return parseStringify({ accountId: otpSent });
+
+      // Sync the accountId if it changed
+      if (otpSent !== existingUser.accountId) {
+        const { databases } = await createAdminClient();
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.usersCollectionId,
+          existingUser.$id,
+          { accountId: otpSent },
+        );
+      }
+
+      return { accountId: otpSent };
     }
 
     return parseStringify({ accountId: null, error: "User not found" });

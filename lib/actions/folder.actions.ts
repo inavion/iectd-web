@@ -660,7 +660,7 @@ export const createEctdPhase1 = async ({ path }: { path: string }) => {
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
     [
-      Query.equal("accountId", currentUser.accountId),
+      Query.equal("owner", currentUser.$id),
       Query.equal("name", "ieCTD/Drugs"),
       Query.isNull("parentFolderId"),
     ],
@@ -718,7 +718,7 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
     [
-      Query.equal("accountId", currentUser.accountId),
+      Query.equal("owner", currentUser.$id),
       Query.equal("name", "ieCTD/Drugs"),
       Query.isNull("parentFolderId"),
     ],
@@ -735,7 +735,7 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
     appwriteConfig.databaseId,
     appwriteConfig.foldersCollectionId,
     [
-      Query.equal("accountId", currentUser.accountId),
+      Query.equal("owner", currentUser.$id),
       Query.equal("parentFolderId", rootFolderId),
     ],
   );
@@ -777,7 +777,7 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
       [
-        Query.equal("accountId", currentUser.accountId),
+        Query.equal("owner", currentUser.$id),
         Query.equal("name", node.name),
         parentQuery,
       ],
@@ -831,7 +831,7 @@ export const isPhase2Complete = async (): Promise<boolean> => {
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
       [
-        Query.equal("accountId", currentUser.accountId),
+        Query.equal("owner", currentUser.$id),
         Query.equal("name", "ieCTD/Drugs"),
         Query.isNull("parentFolderId"),
       ],
