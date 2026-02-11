@@ -13,6 +13,7 @@ const FolderSetupBanner = () => {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState("Checking folder structure...");
+  
 
   useEffect(() => {
     let isCancelled = false;
@@ -34,7 +35,7 @@ const FolderSetupBanner = () => {
 
       // Check if currently in progress (from another navigation)
       const inProgress = localStorage.getItem("folder_setup_in_progress");
-      
+
       try {
         // Check server status
         console.log("[FolderSetup] Checking if folders exist...");
@@ -58,17 +59,23 @@ const FolderSetupBanner = () => {
         setStatus("Creating MODULE 1 & 2...");
         await createEctdPhase1({ path: "/documents" });
         console.log("[FolderSetup] ✅ Phase 1 complete");
+        router.refresh();
 
         if (isCancelled) {
-          console.log("[FolderSetup] ⚠️ Cancelled during Phase 1, will resume on next mount");
+          console.log(
+            "[FolderSetup] ⚠️ Cancelled during Phase 1, will resume on next mount",
+          );
           return;
         }
 
         // Phase 2
-        console.log("[FolderSetup] 🚀 Starting Phase 2 (m3 + m4 + m5)...");
-        setStatus("Creating MODULE 3, 4, 5... (Refresh if need to");
+        console.log(
+          "[FolderSetup] 🚀 Starting Phase 2 (m3 + m4 + m5)... (Refresh after 2 minutes)",
+        );
+        setStatus("Creating MODULE 3, 4, 5... (please wait atleast 2 minutes)");
         await createEctdPhase2({ path: "/documents" });
         console.log("[FolderSetup] ✅ Phase 2 complete");
+        router.refresh();
 
         if (!isCancelled) {
           console.log("[FolderSetup] 🎉 All folders created successfully!");

@@ -832,13 +832,12 @@ export const isPhase2Complete = async (): Promise<boolean> => {
       appwriteConfig.foldersCollectionId,
       [
         Query.equal("owner", currentUser.$id),
-        Query.equal("name", "ieCTD/Drugs"),
-        Query.isNull("parentFolderId"),
+        Query.equal("name", "54-lit-ref"),
+        // Query.isNull("parentFolderId"),
       ],
     );
 
     return rootFolders.total > 0;
-    
   } catch (error) {
     console.error("isPhase2Complete error:", error);
     return false;
