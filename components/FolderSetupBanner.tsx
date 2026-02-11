@@ -66,7 +66,7 @@ const FolderSetupBanner = () => {
 
         // Phase 2
         console.log("[FolderSetup] 🚀 Starting Phase 2 (m3 + m4 + m5)...");
-        setStatus("Creating MODULE 3, 4, 5...");
+        setStatus("Creating MODULE 3, 4, 5... (Refresh if need to");
         await createEctdPhase2({ path: "/documents" });
         console.log("[FolderSetup] ✅ Phase 2 complete");
 
