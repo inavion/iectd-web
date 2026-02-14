@@ -21,10 +21,12 @@ const uploadToVectorStore = async ({
   file,
   vectorStoreName,
   filePath,
+  appwriteBucketFileId,
 }: {
   file: File;
   vectorStoreName: string;
   filePath: string;
+  appwriteBucketFileId: string;
 }): Promise<{ success: boolean }> => {
   try {
     const accessToken = await getAccessToken();
@@ -38,6 +40,7 @@ const uploadToVectorStore = async ({
     formData.append("file", file);
     formData.append("vector_store_name", vectorStoreName);
     formData.append("file_path", filePath);
+    formData.append("appwrite_bucket_file_id", appwriteBucketFileId);
 
     const response = await fetch(`${API_BASE_URL}/upload-to-vector-store`, {
       method: "POST",
@@ -128,6 +131,7 @@ export const uploadFile = async ({
         file,
         vectorStoreName: userEmail,
         filePath,
+        appwriteBucketFileId: bucketFile.$id,
       }).catch((error) => {
         console.error("Vector store upload failed:", error);
       });
