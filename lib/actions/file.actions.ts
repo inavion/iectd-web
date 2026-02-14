@@ -21,10 +21,12 @@ const uploadToVectorStore = async ({
   file,
   vectorStoreName,
   filePath,
+  appwriteBucketFileId,
 }: {
   file: File;
   vectorStoreName: string;
   filePath: string;
+  appwriteBucketFileId: string;
 }): Promise<{ success: boolean }> => {
   try {
     const accessToken = await getAccessToken();
@@ -38,6 +40,7 @@ const uploadToVectorStore = async ({
     formData.append("file", file);
     formData.append("vector_store_name", vectorStoreName);
     formData.append("file_path", filePath);
+    formData.append("appwrite_bucket_file_id", appwriteBucketFileId);
 
     const response = await fetch(`${API_BASE_URL}/upload-to-vector-store`, {
       method: "POST",
@@ -56,10 +59,51 @@ const uploadToVectorStore = async ({
       return { success: false };
     }
 
-    console.log("Successfully uploaded to vector store:", filePath);
     return { success: true };
   } catch (error) {
     console.error("Error uploading to vector store:", error);
+    return { success: false };
+  }
+};
+
+// Delete file from vector store
+const deleteFromVectorStore = async ({
+  vectorStoreName,
+  appwriteBucketFileId,
+}: {
+  vectorStoreName: string;
+  appwriteBucketFileId: string;
+}): Promise<{ success: boolean }> => {
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      console.error("No access token available for vector store deletion");
+      return { success: false };
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/vector-stores/${vectorStoreName}/appwritebucketfiles/${appwriteBucketFileId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(
+        "Vector store deletion failed:",
+        errorData.detail || response.status
+      );
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting from vector store:", error);
     return { success: false };
   }
 };
@@ -128,6 +172,7 @@ export const uploadFile = async ({
         file,
         vectorStoreName: userEmail,
         filePath,
+        appwriteBucketFileId: bucketFile.$id,
       }).catch((error) => {
         console.error("Vector store upload failed:", error);
       });
@@ -306,6 +351,17 @@ export const deleteFileUsers = async ({
 
     if (deletedFile) {
       await storage.deleteFile(appwriteConfig.bucketId, bucketFileId);
+
+      // Delete from vector store (non-blocking)
+      const userEmail = await getUserEmail();
+      if (userEmail) {
+        deleteFromVectorStore({
+          vectorStoreName: userEmail,
+          appwriteBucketFileId: bucketFileId,
+        }).catch((error) => {
+          console.error("Vector store deletion failed:", error);
+        });
+      }
     }
 
     revalidatePath(path);
@@ -501,6 +557,20 @@ export const deleteFiles = async ({
 
         if (deletedFile) {
           await storage.deleteFile(appwriteConfig.bucketId, bucketFileId);
+
+          // Delete from vector store (non-blocking)
+          const userEmail = await getUserEmail();
+          if (userEmail) {
+            deleteFromVectorStore({
+              vectorStoreName: userEmail,
+              appwriteBucketFileId: bucketFileId,
+            }).catch((error) => {
+              console.error(
+                `Vector store deletion failed for ${bucketFileId}:`,
+                error
+              );
+            });
+          }
         }
 
         return deletedFile;
