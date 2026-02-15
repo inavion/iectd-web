@@ -138,13 +138,23 @@ const FolderRow = ({
       `}
     >
       <div className="col-span-5 ml-2 flex items-center gap-2 min-w-0 !mx-5">
-        <Image
-          src="/assets/icons/folder.png"
-          alt="folder"
-          width={20}
-          height={20}
-          className="w-8 h-8"
-        />
+        {isLoading ? (
+          <Image
+            src="/assets/icons/loader.svg"
+            alt="loader"
+            width={24}
+            height={24}
+            className="animate-spin invert w-8 w-8"
+          />
+        ) : (
+          <Image
+            src="/assets/icons/folder.png"
+            alt="folder"
+            width={20}
+            height={20}
+            className="w-8 h-8"
+          />
+        )}
         <p className="truncate !ml-2">{folder.name}</p>
       </div>
 
