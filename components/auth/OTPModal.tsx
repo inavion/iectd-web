@@ -102,7 +102,7 @@ const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
       onOpenChange={isSettingUp ? undefined : setIsOpen}
     >
       <AlertDialogContent className="shad-alert-dialog">
-        {isSettingUp ? (
+        {isSettingUp && !hideSetupView ? (
           // Setting up account view
           <div className="flex flex-col items-center justify-center py-8 gap-6">
             <div className="relative">
