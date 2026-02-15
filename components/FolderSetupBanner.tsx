@@ -56,7 +56,7 @@ const FolderSetupBanner = () => {
 
         // Phase 1
         console.log("[FolderSetup] 🚀 Starting Phase 1 (root + m1 + m2)...");
-        setStatus("Creating MODULE 1 & 2...");
+        setStatus("Creating MODULE 1 & 2... (just a moment)");
         await createEctdPhase1({ path: "/documents" });
         console.log("[FolderSetup] ✅ Phase 1 complete");
         router.refresh();

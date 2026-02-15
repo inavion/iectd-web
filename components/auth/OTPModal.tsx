@@ -20,7 +20,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { sendEmailOTP, verifySecret } from "@/lib/actions/user.actions";
 import { loginUser } from "@/lib/actions/auth.actions";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface OTPModalProps {
   accountId: string;
@@ -30,10 +30,13 @@ interface OTPModalProps {
 
 const OTPModal = ({ accountId, email, password }: OTPModalProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingUp, setIsSettingUp] = useState(false);
+
+  const hideSetupView = pathname.startsWith("/sign-in");
 
   const handleSubmit = async (
     e: React.FormEvent | React.MouseEvent<HTMLButtonElement>,

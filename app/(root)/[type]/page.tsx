@@ -100,6 +100,8 @@ const Page = async ({ searchParams }: SearchParamProps) => {
   const totalUploadedMB = formatBytesToMB(totalUploadedBytes);
   const maxStorageMB = MAX_FILE_SIZE / (1024 * 1024);
 
+  console.log(files);
+
   return (
     <div className="page-container">
       <Phase2LoadingBanner />

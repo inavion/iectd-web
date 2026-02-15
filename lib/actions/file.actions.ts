@@ -54,7 +54,7 @@ const uploadToVectorStore = async ({
       const errorData = await response.json().catch(() => ({}));
       console.error(
         "Vector store upload failed:",
-        errorData.detail || response.status
+        errorData.detail || response.status,
       );
       return { success: false };
     }
@@ -123,7 +123,7 @@ export const uploadFile = async ({
     const bucketFile = await storage.createFile(
       appwriteConfig.bucketId,
       ID.unique(),
-      inputFile
+      inputFile,
     );
 
     const fileDocument = {
@@ -144,7 +144,7 @@ export const uploadFile = async ({
         appwriteConfig.databaseId,
         appwriteConfig.filesCollectionId,
         ID.unique(),
-        fileDocument
+        fileDocument,
       )
 
       .catch(async (error: unknown) => {
@@ -187,18 +187,30 @@ export const uploadFile = async ({
 
 // Helper function to get folder path
 const getFolderPath = async (
-  databases: ReturnType<Awaited<ReturnType<typeof createAdminClient>>["databases"]["getDocument"]> extends Promise<infer T> ? { getDocument: (...args: Parameters<Awaited<ReturnType<typeof createAdminClient>>["databases"]["getDocument"]>) => Promise<T> } : never,
-  folderId: string
+  databases: ReturnType<
+    Awaited<ReturnType<typeof createAdminClient>>["databases"]["getDocument"]
+  > extends Promise<infer T>
+    ? {
+        getDocument: (
+          ...args: Parameters<
+            Awaited<
+              ReturnType<typeof createAdminClient>
+            >["databases"]["getDocument"]
+          >
+        ) => Promise<T>;
+      }
+    : never,
+  folderId: string,
 ): Promise<string> => {
   const pathParts: string[] = [];
   let currentFolderId: string | null = folderId;
 
   while (currentFolderId) {
-    const folder = await databases.getDocument(
+    const folder = (await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.foldersCollectionId,
-      currentFolderId
-    ) as Models.Document & { name: string; parentId?: string | null };
+      currentFolderId,
+    )) as Models.Document & { name: string; parentId?: string | null };
 
     pathParts.unshift(folder.name);
     currentFolderId = folder.parentId || null;
@@ -212,7 +224,7 @@ const createQueries = (
   types: string[],
   searchText: string,
   sort: string,
-  limit?: number
+  limit?: number,
 ) => {
   const queries = [
     Query.or([
@@ -229,7 +241,7 @@ const createQueries = (
     const [sortBy, orderBy] = sort.split("-");
 
     queries.push(
-      orderBy === "asc" ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
+      orderBy === "asc" ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     );
   }
 
@@ -253,7 +265,7 @@ export const getFiles = async ({
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
-      queries
+      queries,
     );
 
     // Populate owner data and fix URLs for each file
@@ -266,7 +278,7 @@ export const getFiles = async ({
           const ownerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             appwriteConfig.usersCollectionId,
-            file.owner
+            file.owner,
           );
           return {
             ...file,
@@ -275,7 +287,7 @@ export const getFiles = async ({
           } as Models.Document;
         }
         return { ...file, url: correctUrl } as Models.Document;
-      })
+      }),
     );
 
     return parseStringify({ ...files, documents: filesWithOwners });
@@ -301,7 +313,7 @@ export const renameFile = async ({
       fileId,
       {
         name: newName,
-      }
+      },
     );
 
     revalidatePath(path);
@@ -325,7 +337,7 @@ export const updateFileUsers = async ({
       fileId,
       {
         users: emails,
-      }
+      },
     );
 
     revalidatePath(path);
@@ -346,7 +358,7 @@ export const deleteFileUsers = async ({
     const deletedFile = await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
-      fileId
+      fileId,
     );
 
     if (deletedFile) {
@@ -381,7 +393,7 @@ export async function getTotalSpaceUsed() {
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
-      [Query.equal("owner", [currentUser.$id])]
+      [Query.equal("owner", [currentUser.$id])],
     );
 
     const totalSpace = {
@@ -434,43 +446,20 @@ export const getFilesByFolder = async ({
       Query.equal("owner", [currentUser.$id]),
       Query.contains("users", [currentUser.email]),
     ]),
+    folderId === null
+      ? Query.isNull("folderId")
+      : Query.equal("folderId", folderId),
     Query.orderDesc("$createdAt"),
   ];
-
-  // For specific folders, we can query directly
-  if (folderId !== null) {
-    queries.unshift(Query.equal("folderId", folderId));
-  }
 
   const files = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.filesCollectionId,
-    queries
+    queries,
   );
-
-  // For root level (folderId === null), filter out files that are in EXISTING folders
-  if (folderId === null) {
-    // Get all existing folder IDs to check for orphaned files
-    const existingFolders = await databases.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.foldersCollectionId,
-      [Query.limit(1000)] // Get all folders
-    );
-    const existingFolderIds = new Set(existingFolders.documents.map((f) => f.$id));
-
-    // Root files = no folderId OR folderId points to deleted folder (orphaned)
-    const rootFiles = files.documents.filter((file) => {
-      if (!file.folderId) return true; // null/undefined = root
-      if (!existingFolderIds.has(file.folderId)) return true; // orphaned = treat as root
-      return false; // in a valid folder
-    });
-
-    return parseStringify({ ...files, documents: rootFiles, total: rootFiles.length });
-  }
 
   return parseStringify(files);
 };
-
 
 /* ============================
    MOVE FILE TO FOLDER
@@ -491,7 +480,7 @@ export const moveFileToFolder = async ({
       appwriteConfig.databaseId,
       appwriteConfig.filesCollectionId,
       fileId,
-      { folderId: targetFolderId }
+      { folderId: targetFolderId },
     );
 
     revalidatePath(path);
@@ -522,9 +511,9 @@ export const moveFilesToFolder = async ({
           appwriteConfig.databaseId,
           appwriteConfig.filesCollectionId,
           fileId,
-          { folderId: targetFolderId }
-        )
-      )
+          { folderId: targetFolderId },
+        ),
+      ),
     );
 
     revalidatePath(path);
@@ -552,7 +541,7 @@ export const deleteFiles = async ({
         const deletedFile = await databases.deleteDocument(
           appwriteConfig.databaseId,
           appwriteConfig.filesCollectionId,
-          fileId
+          fileId,
         );
 
         if (deletedFile) {
@@ -574,7 +563,7 @@ export const deleteFiles = async ({
         }
 
         return deletedFile;
-      })
+      }),
     );
 
     revalidatePath(path);

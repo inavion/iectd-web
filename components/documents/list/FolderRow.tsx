@@ -14,6 +14,7 @@ import {
 } from "@/lib/actions/folder.actions";
 import { toast } from "sonner";
 import { DraggedItem } from "@/components/drag-drop/DragContext";
+import { useState } from "react";
 
 interface FolderRowProps {
   folder: any;
@@ -36,6 +37,12 @@ const FolderRow = ({
 }: FolderRowProps) => {
   const router = useRouter();
   const path = usePathname();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleOpenFolder = async () => {
+    setIsLoading(true);
+    router.push(`/folders/${folder.$id}`);
+  };
 
   // Check if this folder is a valid drop target (not dropping onto self)
   const canDrop =
@@ -122,7 +129,7 @@ const FolderRow = ({
         if (canDrop) setHoveredFolderId(null);
       }}
       onMouseUp={handleMouseUp}
-      onDoubleClick={() => router.push(`/folders/${folder.$id}`)}
+      onDoubleClick={handleOpenFolder}
       className={`relative grid grid-cols-12 items-center pt-2 cursor-pointer
         transition-colors duration-150 ease-in-out
         ${isDropTarget && canDrop ? "bg-blue-100 ring-2 ring-blue-400" : ""}
