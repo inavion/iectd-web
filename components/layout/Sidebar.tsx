@@ -4,9 +4,10 @@ import { avatarPlaceholderUrl, navItems } from "@/constants";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import CreateNew from "@/components/templates/CreateNew";
+import { useEffect } from "react";
 // REMOVE: import FolderTree from "@/components/navigation/FolderTree";
 
 interface Props {
@@ -26,10 +27,15 @@ const Sidebar = ({
   ownerId,
   accountId,
 }: Props) => {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const folderMatch = pathname.match(/^\/folders\/([^/]+)/);
   const parentFolderId = folderMatch ? folderMatch[1] : null;
+  const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingUrl(null);
+  }, [pathname]);
 
   return (
     <aside className="sidebar remove-scrollbar">
@@ -60,7 +66,16 @@ const Sidebar = ({
         <ul className="flex flex-col flex-1 gap-6 ">
           {navItems.map(({ url, name, icon }) => {
             return (
-              <Link href={url} key={name} className="lg:w-full ">
+              <div
+                key={name}
+                className="lg:w-full cursor-pointer"
+                onClick={() => {
+                  if (pathname !== url) {
+                    setLoadingUrl(url);
+                    router.push(url);
+                  }
+                }}
+              >
                 <li
                   className={cn(
                     "sidebar-nav-item h5",
@@ -68,18 +83,19 @@ const Sidebar = ({
                   )}
                 >
                   <Image
-                    src={icon}
+                    src={loadingUrl === url ? "/assets/icons/loader.svg" : icon}
                     alt={name}
                     width={24}
                     height={24}
                     className={cn(
                       "nav-icon",
                       pathname === url && "nav-icon-active",
+                      loadingUrl === url && "animate-spin",
                     )}
                   />
                   <p className="lg:block hidden">{name}</p>
                 </li>
-              </Link>
+              </div>
             );
           })}
         </ul>

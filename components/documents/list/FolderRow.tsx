@@ -144,11 +144,11 @@ const FolderRow = ({
             alt="loader"
             width={24}
             height={24}
-            className="animate-spin invert w-8 w-8"
+            className="animate-spin invert w-8 h-8"
           />
         ) : (
           <Image
-            src="/assets/icons/folder.png"
+            src="/assets/icons/folder 2.png"
             alt="folder"
             width={20}
             height={20}
