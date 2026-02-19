@@ -62,14 +62,15 @@ export const createFolder = async ({
 };
 
 export const getFoldersByParent = async ({
+  currentUser,
   parentFolderId = null,
 }: {
+  currentUser: any;
   parentFolderId?: string | null;
 }) => {
   const { databases } = await createAdminClient();
 
   try {
-    const currentUser = await getCurrentUser();
     if (!currentUser) throw new Error("User not authenticated");
 
     const queries = [
@@ -326,9 +327,14 @@ const deleteFolderRecursively = async (folderId: string) => {
 /* ============================
    SEARCH FOLDERS
 ============================ */
-export const searchFolders = async ({ searchText }: { searchText: string }) => {
+export const searchFolders = async ({
+  searchText,
+  currentUser,
+}: {
+  searchText: string;
+  currentUser: any;
+}) => {
   const { databases } = await createAdminClient();
-  const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("User not authenticated");
 
   const queries = [
@@ -511,10 +517,11 @@ export const deleteFolders = async ({
 ============================ */
 export const createEctdStructureForUser = async ({
   path,
+  currentUser,
 }: {
   path: string;
+  currentUser: any;
 }) => {
-  const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("User not authenticated");
 
   // Check if user already has the ieCTD root folder
@@ -570,9 +577,8 @@ export const createEctdStructureForUser = async ({
 /* ============================
    GET ALL FOLDERS FOR TREE VIEW
 ============================ */
-export const getAllFoldersForTree = async () => {
+export const getAllFoldersForTree = async (currentUser: any) => {
   const { databases } = await createAdminClient();
-  const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("User not authenticated");
 
   const folders = await databases.listDocuments(
@@ -649,8 +655,13 @@ export const findOrCreateFolderByPath = async ({
   return parentFolderId!;
 };
 
-export const createEctdPhase1 = async ({ path }: { path: string }) => {
-  const currentUser = await getCurrentUser();
+export const createEctdPhase1 = async ({
+  path,
+  currentUser,
+}: {
+  path: string;
+  currentUser: any;
+}) => {
   if (!currentUser) throw new Error("User not authenticated");
 
   const { databases } = await createAdminClient();
@@ -707,8 +718,13 @@ export const createEctdPhase1 = async ({ path }: { path: string }) => {
 
 // Create Phase 2: m3, m4, m5 (background, after sign-in)
 // Create Phase 2: m3, m4, m5 (background, after sign-in)
-export const createEctdPhase2 = async ({ path }: { path: string }) => {
-  const currentUser = await getCurrentUser();
+export const createEctdPhase2 = async ({
+  path,
+  currentUser,
+}: {
+  path: string;
+  currentUser: any;
+}) => {
   if (!currentUser) throw new Error("User not authenticated");
 
   const { databases } = await createAdminClient();
@@ -819,9 +835,8 @@ export const createEctdPhase2 = async ({ path }: { path: string }) => {
 };
 
 // Check if Phase 2 is complete
-export const isPhase2Complete = async (): Promise<boolean> => {
+export const isPhase2Complete = async (currentUser: any): Promise<boolean> => {
   try {
-    const currentUser = await getCurrentUser();
     if (!currentUser) return false;
 
     const { databases } = await createAdminClient();

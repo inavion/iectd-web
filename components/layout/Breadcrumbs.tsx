@@ -24,6 +24,9 @@ import {
 } from "@/components/ui/breadcrumb";
 import Image from "next/image";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+
 interface Crumb {
   id: string;
   name: string;
@@ -33,6 +36,8 @@ const Breadcrumbs = () => {
   const pathname = usePathname();
   const [crumbs, setCrumbs] = useState<Crumb[]>([]);
   const [hoveredCrumbId, setHoveredCrumbId] = useState<string | null>(null);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const { draggedItems, setHoveredFolderId } = useDrag();
 

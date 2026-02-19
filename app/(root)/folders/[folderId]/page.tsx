@@ -1,10 +1,11 @@
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 import { getFoldersByParent } from "@/lib/actions/folder.actions";
+
+import { cookies } from "next/headers";
 import { getFilesByFolder } from "@/lib/actions/file.actions";
 import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import DragAndDrop from "@/components/drag-drop/DragAndDrop";
 import DragDropOverlay from "@/components/drag-drop/DragDropOverlay";
-import { getCurrentUser } from "@/lib/actions/user.actions";
 import ListLayout from "@/components/documents/ListLayout";
 import GridLayout from "@/components/documents/GridLayout";
 import VersionToggle from "@/components/VersionToggle";
@@ -23,8 +24,8 @@ const FolderPage = async ({
 
   const parentFolderId = folderId || null;
 
-  const folders = await getFoldersByParent({ parentFolderId });
-  const files = await getFilesByFolder({ folderId: parentFolderId });
+  const folders = await getFoldersByParent({ parentFolderId, currentUser });
+  const files = await getFilesByFolder({ folderId: parentFolderId, currentUser });
 
   // Get view from URL params first, then cookie, then default to "list"
   const cookieStore = await cookies();

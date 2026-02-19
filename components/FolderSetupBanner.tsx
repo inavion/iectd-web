@@ -8,12 +8,15 @@ import {
   createEctdPhase1,
   createEctdPhase2,
 } from "@/lib/actions/folder.actions";
+import { getCurrentUser } from "@/lib/actions/user.actions";
+
+const currentUser = await getCurrentUser();
+if (!currentUser) throw new Error("Not authenticated");
 
 const FolderSetupBanner = () => {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState("Checking folder structure...");
-  
 
   useEffect(() => {
     let isCancelled = false;
@@ -23,7 +26,7 @@ const FolderSetupBanner = () => {
       const setupComplete = localStorage.getItem("folder_setup_complete");
       if (setupComplete === "true") {
         // Double-check with server
-        const serverComplete = await isPhase2Complete();
+        const serverComplete = await isPhase2Complete(currentUser);
         if (serverComplete) {
           console.log("[FolderSetup] ✅ All folders already exist");
           return;
@@ -39,7 +42,7 @@ const FolderSetupBanner = () => {
       try {
         // Check server status
         console.log("[FolderSetup] Checking if folders exist...");
-        const complete = await isPhase2Complete();
+        const complete = await isPhase2Complete(currentUser);
 
         if (isCancelled) return;
 
@@ -57,7 +60,7 @@ const FolderSetupBanner = () => {
         // Phase 1
         console.log("[FolderSetup] 🚀 Starting Phase 1 (root + m1 + m2)...");
         setStatus("Creating MODULE 1 & 2... (just a moment)");
-        await createEctdPhase1({ path: "/documents" });
+        await createEctdPhase1({ path: "/documents", currentUser });
         console.log("[FolderSetup] ✅ Phase 1 complete");
         router.refresh();
 
@@ -73,7 +76,7 @@ const FolderSetupBanner = () => {
           "[FolderSetup] 🚀 Starting Phase 2 (m3 + m4 + m5)... (Refresh after 2 minutes)",
         );
         setStatus("Creating MODULE 3, 4, 5... (please wait atleast 2 minutes)");
-        await createEctdPhase2({ path: "/documents" });
+        await createEctdPhase2({ path: "/documents" , currentUser});
         console.log("[FolderSetup] ✅ Phase 2 complete");
         router.refresh();
 

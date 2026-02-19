@@ -83,8 +83,15 @@ const Page = async ({ searchParams }: SearchParamProps) => {
     }
   } else {
     // Normal load - get all root items
-    files = await getFilesByFolder({ folderId: null });
-    folders = await getFoldersByParent({ parentFolderId: null });
+    files = await getFilesByFolder({
+      folderId: null,
+      currentUser,
+    });
+    
+    folders = await getFoldersByParent({
+      currentUser,
+      parentFolderId: null,
+    });
   }
 
   const formatBytesToMB = (bytes: number) => {

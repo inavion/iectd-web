@@ -432,11 +432,12 @@ export async function getTotalSpaceUsed() {
 
 export const getFilesByFolder = async ({
   folderId,
+  currentUser
 }: {
-  folderId: string | null;
+  folderId: string | null,
+  currentUser: any
 }) => {
   const { databases } = await createAdminClient();
-  const currentUser = await getCurrentUser();
 
   if (!currentUser) throw new Error("Not authenticated");
 
