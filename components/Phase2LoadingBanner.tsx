@@ -7,12 +7,16 @@ import {
   isPhase2Complete,
   createEctdPhase2,
 } from "@/lib/actions/folder.actions";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 
-const Phase2LoadingBanner = () => {
+const Phase2LoadingBanner = async () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
   const hasStarted = useRef(false); // Prevent multiple runs
+
+  const currentUser = await getCurrentUser();
+  if (!currentUser) throw new Error("Not authenticated");
 
   useEffect(() => {
     // Prevent running multiple times
@@ -27,7 +31,7 @@ const Phase2LoadingBanner = () => {
       if (isCreating === "true") {
         // Another tab/instance is already creating, just wait and poll
         const pollInterval = setInterval(async () => {
-          const complete = await isPhase2Complete();
+          const complete = await isPhase2Complete(currentUser);
           if (complete && !isCancelled) {
             setIsComplete(true);
             setIsLoading(false);
@@ -38,7 +42,7 @@ const Phase2LoadingBanner = () => {
         return;
       }
 
-      const complete = await isPhase2Complete();
+      const complete = await isPhase2Complete(currentUser);
 
       if (isCancelled) return;
 
@@ -49,7 +53,7 @@ const Phase2LoadingBanner = () => {
         try {
           // Set lock
           localStorage.setItem("phase2_creating", "true");
-          await createEctdPhase2({ path: "/documents" });
+          await createEctdPhase2({ path: "/documents", currentUser });
           if (!isCancelled) {
             setIsComplete(true);
             router.refresh();
