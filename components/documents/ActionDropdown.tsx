@@ -44,7 +44,7 @@ const ActionDropdown = ({
       bucketFile: string;
       owner: Models.Document & { fullName: string };
       users: string[];
-      isSystemResource: boolean;
+      isSystemResource?: boolean;
     };
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
