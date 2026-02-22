@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import { getAllFoldersForTree } from "@/lib/actions/folder.actions";
+import { getCurrentUser } from "@/lib/actions/user.actions";
 
 interface TreeFolder {
   $id: string;
@@ -20,10 +20,19 @@ interface FolderTreeNodeProps {
   currentFolderId?: string | null;
 }
 
-const FolderTreeNode = ({ folder, level, currentFolderId }: FolderTreeNodeProps) => {
+const FolderTreeNode = async ({
+  folder,
+  level,
+  currentFolderId,
+}: FolderTreeNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasChildren = folder.children && folder.children.length > 0;
   const isActive = currentFolderId === folder.$id;
+
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    ("User unathenticated");
+  }
 
   // Style for items with children (like MODULE 2, MODULE 3)
   const isModule = hasChildren && level === 1;
@@ -99,9 +108,9 @@ const FolderTree = ({ currentFolderId }: FolderTreeProps) => {
   useEffect(() => {
     if (isOpen && folders.length === 0) {
       setLoading(true);
-      getAllFoldersForTree()
-        .then((data) => setFolders(data || []))
-        .finally(() => setLoading(false));
+      fetch("/api/folders/tree")
+        .then((res) => res.json())
+        .then((data) => setFolders(data || []));
     }
   }, [isOpen, folders.length]);
 

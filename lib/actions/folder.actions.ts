@@ -329,7 +329,7 @@ const deleteFolderRecursively = async (folderId: string) => {
 ============================ */
 export const searchFolders = async ({ searchText }: { searchText: string }) => {
   const { databases } = await createAdminClient();
-  const currentUser = getCurrentUser();
+  const currentUser = await getCurrentUser();
   if (!currentUser) throw new Error("User not authenticated");
 
   const queries = [
