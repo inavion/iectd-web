@@ -44,7 +44,7 @@ const Search = () => {
 
       const [filesRes, foldersRes] = await Promise.all([
         getFiles({ searchText: debouncedQuery, limit: 5 }),
-        searchFolders({ searchText: debouncedQuery }),
+        searchFolders({ searchText: debouncedQuery}),
       ]);
 
       const fileResults: SearchResult[] = (filesRes?.documents || []).map((f: any) => ({

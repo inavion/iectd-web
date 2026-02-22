@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 export interface DraggedItem {
   id: string;
@@ -9,6 +15,7 @@ export interface DraggedItem {
   url?: string;
   extension?: string;
   fileType?: string;
+  isSystem?: boolean;
 }
 
 interface DragContextType {
@@ -20,7 +27,9 @@ interface DragContextType {
   // Legacy single item (computed from first item for backwards compat)
   draggedItem: DraggedItem | null;
   mouseDownPos: { x: number; y: number } | null;
-  setMouseDownPos: React.Dispatch<React.SetStateAction<{ x: number; y: number } | null>>;
+  setMouseDownPos: React.Dispatch<
+    React.SetStateAction<{ x: number; y: number } | null>
+  >;
   cursorPos: { x: number; y: number };
   hoveredFolderId: string | null;
   setHoveredFolderId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -33,7 +42,10 @@ const DRAG_THRESHOLD = 5;
 export function DragProvider({ children }: { children: ReactNode }) {
   const [draggedItems, setDraggedItems] = useState<DraggedItem[]>([]);
   const [pendingDragItems, setPendingDragItems] = useState<DraggedItem[]>([]);
-  const [mouseDownPos, setMouseDownPos] = useState<{ x: number; y: number } | null>(null);
+  const [mouseDownPos, setMouseDownPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
 

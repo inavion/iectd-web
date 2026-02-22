@@ -15,8 +15,6 @@ import { deleteFiles } from "@/lib/actions/file.actions";
 import { deleteFolders } from "@/lib/actions/folder.actions";
 import { toast } from "sonner";
 
-import { getAllTemplateFolderNames } from "@/components/templates/iectd-folder-structure";
-
 interface SelectedItem {
   id: string;
   type: "file" | "folder";
@@ -38,19 +36,17 @@ const SelectionActions = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const path = usePathname();
 
-  const hasSystemFolder = selectedItems.some(
-    (item) => item.type === "folder" && item.isSystem === true,
+  const hasSystemItem = selectedItems.some(
+    (item) => item.isSystem === true
   );
 
-  // Don't return null if modal is open or deleting - keep component mounted
   const showToolbar = selectedItems.length > 0;
-  const showModal = isDeleteModalOpen || isDeleting;
 
-  if (!showToolbar && !showModal) return null;
+  if (!showToolbar) return null;
 
   const fileCount = selectedItems.filter((item) => item.type === "file").length;
   const folderCount = selectedItems.filter(
-    (item) => item.type === "folder",
+    (item) => item.type === "folder"
   ).length;
 
   const getSelectionText = () => {
@@ -67,32 +63,25 @@ const SelectionActions = ({
 
     try {
       const filesToDelete = selectedItems
-        .filter((item) => item.type === "file" && item.bucketFileId)
+        .filter(
+          (item) =>
+            item.type === "file" &&
+            item.bucketFileId &&
+            item.isSystem !== true
+        )
         .map((item) => ({
           fileId: item.id,
           bucketFileId: item.bucketFileId!,
         }));
 
-      const templateFolderNames = getAllTemplateFolderNames();
       const folderIds = selectedItems
         .filter((item) => item.type === "folder" && item.isSystem !== true)
         .map((item) => item.id);
 
-      // Count protected folders that were skipped
-      const protectedCount = selectedItems.filter(
-        (item) => item.type === "folder" && item.isSystem === true,
-      ).length;
-
-      if (protectedCount > 0) {
-        toast.warning(`${protectedCount} template folder(s) cannot be deleted`);
-      }
-
-      // Delete files
       if (filesToDelete.length > 0) {
         await deleteFiles({ files: filesToDelete, path });
       }
 
-      // Delete folders
       if (folderIds.length > 0) {
         await deleteFolders({ folderIds, path });
       }
@@ -110,68 +99,60 @@ const SelectionActions = ({
   return (
     <>
       {/* Selection toolbar */}
-      {showToolbar && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white shadow-lg rounded-lg px-4 py-3 flex items-center gap-4 border border-gray-200">
-          <span className="text-sm font-medium text-gray-700">
-            {selectedItems.length} selected
-          </span>
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white shadow-lg rounded-lg px-4 py-3 flex items-center gap-4 border border-gray-200">
+        <span className="text-sm font-medium text-gray-700">
+          {selectedItems.length} selected
+        </span>
 
-          <div className="h-4 w-px bg-gray-300" />
+        <div className="h-4 w-px bg-gray-300" />
 
-          {!hasSystemFolder && (
-            <>
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
-              >
-                <Image
-                  src="/assets/icons/delete.svg"
-                  alt="delete"
-                  width={16}
-                  height={16}
-                  className="opacity-70"
-                />
-                Delete
-              </button>
-              
-              <div className="h-4 w-px bg-gray-300" />
-            </>
-          )}
+        {/* Delete button only appears if NO system item is selected */}
+        {!hasSystemItem && (
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <Image
+                src="/assets/icons/delete.svg"
+                alt="delete"
+                width={16}
+                height={16}
+                className="opacity-70"
+              />
+              Delete
+            </button>
 
-          <button
-            onClick={onClearSelection}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <Image
-              src="/assets/icons/close.svg"
-              alt="clear"
-              width={14}
-              height={14}
-              className="opacity-70 invert"
-            />
-            Clear
-          </button>
-        </div>
-      )}
+            <div className="h-4 w-px bg-gray-300" />
+          </>
+        )}
+
+        <button
+          onClick={onClearSelection}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+        >
+          <Image
+            src="/assets/icons/close.svg"
+            alt="clear"
+            width={14}
+            height={14}
+            className="opacity-70 invert"
+          />
+          Clear
+        </button>
+      </div>
 
       {/* Delete confirmation modal */}
       <Dialog
-        open={isDeleteModalOpen}
+        open={!hasSystemItem && isDeleteModalOpen}
         onOpenChange={(open) => {
           if (!isDeleting) setIsDeleteModalOpen(open);
         }}
       >
         <DialogContent
-          className={`shad-dialog button ${isDeleting ? "[&>button]:hidden" : ""}`}
-          onPointerDownOutside={(e) => {
-            if (isDeleting) e.preventDefault();
-          }}
-          onInteractOutside={(e) => {
-            if (isDeleting) e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            if (isDeleting) e.preventDefault();
-          }}
+          className={`shad-dialog button ${
+            isDeleting ? "[&>button]:hidden" : ""
+          }`}
         >
           <DialogHeader>
             <DialogTitle className="text-center text-light-100">
@@ -195,7 +176,7 @@ const SelectionActions = ({
 
             <Button
               onClick={handleDelete}
-              className="modal-cancel-button !bg-red-500  !text-white"
+              className="modal-cancel-button !bg-red-500 !text-white"
               disabled={isDeleting}
             >
               Delete

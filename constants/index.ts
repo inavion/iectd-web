@@ -10,6 +10,11 @@ export const navItems = [
     url: "/documents",
   },
   {
+    name: "Resources",
+    icon: "/assets/icons/resources.png",
+    url: "/resources",
+  },
+  {
     name: "AI Assistant",
     icon: "/assets/icons/ai-assistant.png",
     url: "/ai-assistant",
@@ -93,3 +98,12 @@ export const sortTypes = [
 export const avatarPlaceholderUrl = "/assets/images/avatar.avif";
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+
+export const actionsDropdownItemsWithoutDelete = actionsDropdownItems.filter(
+  (item) => item.value !== "delete"
+);
+
+export const folderDropdownItemsWithoutDelete = folderDropdownItems.filter(
+  (item) => item.value !== "delete"
+);

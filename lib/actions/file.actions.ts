@@ -89,14 +89,14 @@ const deleteFromVectorStore = async ({
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error(
         "Vector store deletion failed:",
-        errorData.detail || response.status
+        errorData.detail || response.status,
       );
       return { success: false };
     }
@@ -230,6 +230,7 @@ const createQueries = (
     Query.or([
       Query.equal("owner", [currentUser.$id]),
       Query.contains("users", [currentUser.email]),
+      Query.equal("isSystemResource", [true]),
     ]),
   ];
 
@@ -252,7 +253,8 @@ export const getFiles = async ({
   searchText = "",
   sort = "$createdAt-desc",
   limit,
-}: GetFilesProps) => {
+  systemOnly = false,
+}: GetFilesProps & { systemOnly?: boolean }) => {
   const { databases } = await createAdminClient();
 
   try {
@@ -261,6 +263,11 @@ export const getFiles = async ({
     if (!currentUser) throw new Error("User not found");
 
     const queries = createQueries(currentUser, [], searchText, sort, limit);
+
+    if (systemOnly) {
+      queries.length = 0;
+      queries.push(Query.equal("isSystemResource", [true]));
+    }
 
     const files = await databases.listDocuments(
       appwriteConfig.databaseId,
@@ -303,6 +310,16 @@ export const renameFile = async ({
   path,
 }: RenameFileProps) => {
   const { databases } = await createAdminClient();
+
+  const fileDoc = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.filesCollectionId,
+    fileId
+  );
+  
+  if (fileDoc.isSystemResource) {
+    throw new Error("System resources cannot be renamed.");
+  }
 
   try {
     const newName = `${name}.${extension}`;
@@ -353,6 +370,16 @@ export const deleteFileUsers = async ({
   path,
 }: DeleteFileProps) => {
   const { databases, storage } = await createAdminClient();
+
+  const fileDoc = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.filesCollectionId,
+    fileId,
+  );
+
+  if (fileDoc.isSystemResource) {
+    throw new Error("System resources cannot be deleted.");
+  }
 
   try {
     const deletedFile = await databases.deleteDocument(
@@ -432,10 +459,10 @@ export async function getTotalSpaceUsed() {
 
 export const getFilesByFolder = async ({
   folderId,
-  currentUser
+  currentUser,
 }: {
-  folderId: string | null,
-  currentUser: any
+  folderId: string | null;
+  currentUser: any;
 }) => {
   const { databases } = await createAdminClient();
 
@@ -475,6 +502,16 @@ export const moveFileToFolder = async ({
   path: string;
 }) => {
   const { databases } = await createAdminClient();
+
+  const fileDoc = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.filesCollectionId,
+    fileId
+  );
+  
+  if (fileDoc.isSystemResource) {
+    throw new Error("System resources cannot be moved.");
+  }
 
   try {
     const updatedFile = await databases.updateDocument(
@@ -539,6 +576,16 @@ export const deleteFiles = async ({
   try {
     const results = await Promise.all(
       files.map(async ({ fileId, bucketFileId }) => {
+        const fileDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.filesCollectionId,
+          fileId,
+        );
+
+        if (fileDoc.isSystemResource) {
+          throw new Error("System resources cannot be deleted.");
+        }
+
         const deletedFile = await databases.deleteDocument(
           appwriteConfig.databaseId,
           appwriteConfig.filesCollectionId,
@@ -557,7 +604,7 @@ export const deleteFiles = async ({
             }).catch((error) => {
               console.error(
                 `Vector store deletion failed for ${bucketFileId}:`,
-                error
+                error,
               );
             });
           }

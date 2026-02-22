@@ -43,6 +43,7 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
       fileType: f.type,
       bucketFileId: f.bucketFile,
       data: f,
+      isSystem: f.isSystemResource,
     }));
     return [...folderItems, ...fileItems];
   }, [folders, files]);
@@ -56,7 +57,7 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
         type: item.type,
         name: item.name,
         bucketFileId: item.type === "file" ? item.bucketFileId : undefined,
-        isSystem:item.type === "folder" ? item.isSystem : undefined,
+        isSystem: item.isSystem === true, // ✅ FIX
       }));
   }, [allItems, selectedIds]);
 
@@ -141,7 +142,7 @@ const GridLayout = ({ folders, files }: GridLayoutProps) => {
 
       // Build dragged items array from the new selection
       const dragItems: DraggedItem[] = allItems
-        .filter((item) => newSelection.has(item.id))
+        .filter((item) => newSelection.has(item.id) && item.isSystem !== true)
         .map((item) => ({
           id: item.id,
           type: item.type,

@@ -15,7 +15,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { actionsDropdownItems } from "@/constants";
+import {
+  actionsDropdownItems,
+  actionsDropdownItemsWithoutDelete,
+} from "@/constants";
 import { constructDownloadUrl } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,6 +43,7 @@ const ActionDropdown = ({
       bucketFile: string;
       owner: Models.Document & { fullName: string };
       users: string[];
+      isSystemResource: boolean;
     };
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +54,12 @@ const ActionDropdown = ({
   const [emails, setEmails] = useState<string[]>([]);
 
   const path = usePathname();
+
+  const isSystemFile = file.isSystemResource === true;
+
+  const dropdownItems = isSystemFile
+    ? actionsDropdownItemsWithoutDelete
+    : actionsDropdownItems;
 
   const closeAllModals = () => {
     setIsModalOpen(false);
@@ -193,7 +203,7 @@ const ActionDropdown = ({
             {file.name}
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-brand-100/50 my-2" />
-          {actionsDropdownItems.map((actionItem) => (
+          {dropdownItems.map((actionItem) => (
             <DropdownMenuItem
               key={actionItem.value}
               className="active-option"
@@ -202,7 +212,7 @@ const ActionDropdown = ({
 
                 if (
                   ["rename", "share", "delete", "details"].includes(
-                    actionItem.value
+                    actionItem.value,
                   )
                 ) {
                   setIsModalOpen(true);
