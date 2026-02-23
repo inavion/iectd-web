@@ -155,13 +155,13 @@ export const uploadFile = async ({
     // Upload to vector store for RAG (non-blocking)
     const userEmail = await getUserEmail();
     if (userEmail && newFile) {
-      // Build file path based on folder structure
-      let filePath = `/${bucketFile.name}`;
+      // Build file path based on folder structure with /documents prefix
+      let filePath = `/documents/${bucketFile.name}`;
       if (folderId) {
         try {
           // Get folder path
           const folderPath = await getFolderPath(databases, folderId);
-          filePath = `${folderPath}/${bucketFile.name}`;
+          filePath = `/documents${folderPath}/${bucketFile.name}`;
         } catch (error) {
           console.error("Error getting folder path:", error);
         }
