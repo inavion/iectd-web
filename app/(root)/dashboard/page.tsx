@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Models } from "node-appwrite";
@@ -11,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { getFiles, getTotalSpaceUsed } from "@/lib/actions/file.actions";
 import { convertFileSize, getUsageSummary } from "@/lib/utils";
 import { Chart } from "@/components/Chart";
+
+
 
 const Dashboard = async () => {
   // Parallel requests
