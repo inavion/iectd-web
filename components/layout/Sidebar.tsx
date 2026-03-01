@@ -17,6 +17,7 @@ interface Props {
   type: string;
   ownerId: string;
   accountId: string;
+  role: "admin" | "user";
 }
 
 const Sidebar = ({
@@ -26,6 +27,7 @@ const Sidebar = ({
   type,
   ownerId,
   accountId,
+  role,
 }: Props) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -98,6 +100,41 @@ const Sidebar = ({
               </div>
             );
           })}
+          {role === "admin" && (
+            <div
+              className="lg:w-full cursor-pointer"
+              onClick={() => {
+                if (pathname !== "/manage-users") {
+                  setLoadingUrl("/manage-users");
+                  router.push("/manage-users");
+                }
+              }}
+            >
+              <li
+                className={cn(
+                  "sidebar-nav-item h5",
+                  pathname === "/manage-users" && "shad-active",
+                )}
+              >
+                <Image
+                  src={
+                    loadingUrl === "/manage-users"
+                      ? "/assets/icons/loader.svg"
+                      : "/assets/icons/manage-users.png"
+                  }
+                  alt="Manage Users"
+                  width={24}
+                  height={24}
+                  className={cn(
+                    "nav-icon",
+                    pathname === "/manage-users" && "nav-icon-active",
+                    loadingUrl === "/manage-users" && "animate-spin",
+                  )}
+                />
+                <p className="lg:block hidden">Manage Users</p>
+              </li>
+            </div>
+          )}
         </ul>
       </nav>
 

@@ -7,6 +7,7 @@ import { parseStringify } from "../utils";
 import { cookies } from "next/headers";
 import { avatarPlaceholderUrl } from "@/constants";
 import { redirect } from "next/navigation";
+import { CORE_ADMIN_EMAILS } from "../constants/admin";
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
@@ -70,6 +71,7 @@ export const createAccount = async ({
           email,
           avatar: avatarPlaceholderUrl,
           accountId,
+          role: "user",
         },
       );
 
@@ -217,5 +219,284 @@ export const signInUser = async ({
       accountId: null,
       error: "Sign in failed. Please try again.",
     });
+  }
+};
+
+export const getAllUsers = async () => {
+  try {
+    const { databases } = await createAdminClient();
+
+    const result = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      [
+        Query.orderDesc("$createdAt"), // newest first
+        Query.limit(100), // adjust if needed
+      ],
+    );
+
+    return parseStringify({
+      documents: result.documents ?? [],
+      total: result.total ?? 0,
+    });
+  } catch (error) {
+    console.error("[getAllUsers] ❌ Error:", error);
+
+    return {
+      documents: [],
+      total: 0,
+    };
+  }
+};
+
+export const createUserByAdmin = async ({
+  fullName,
+  email,
+  password,
+  role,
+}: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: "admin" | "user";
+}) => {
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { users, databases } = await createAdminClient();
+
+    const existing = await users.list([Query.equal("email", normalizedEmail)]);
+
+    let accountId;
+
+    if (existing.total > 0) {
+      accountId = existing.users[0].$id;
+    } else {
+      const newUser = await users.create(
+        ID.unique(),
+        normalizedEmail,
+        undefined,
+        password,
+      );
+      accountId = newUser.$id;
+    }
+
+    await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      ID.unique(),
+      {
+        fullName: fullName.trim(),
+        email: normalizedEmail,
+        role,
+        accountId,
+        avatar: avatarPlaceholderUrl,
+      },
+    );
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("❌ Admin create user error:", error);
+    return {
+      success: false,
+      message: error?.message || "Failed to create user",
+    };
+  }
+};
+
+export const deleteUserByAdmin = async ({
+  userDocId,
+  accountId,
+  currentUserId,
+}: {
+  userDocId: string;
+  accountId: string;
+  currentUserId: string;
+}) => {
+  try {
+    const { databases, storage, users } = await createAdminClient();
+
+    const currentUserDoc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      currentUserId, // make sure this is USER DOC ID
+    );
+
+    if (currentUserDoc.role !== "admin") {
+      return {
+        success: false,
+        message: "Unauthorized action.",
+      };
+    }
+
+    if (currentUserId === accountId) {
+      return {
+        success: false,
+        message: "You cannot delete your own account",
+      };
+    }
+
+    const userDoc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      userDocId,
+    );
+
+    const admins = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      [Query.equal("role", "admin")],
+    );
+
+    if (userDoc.role === "admin" && admins.total <= 1) {
+      return {
+        success: false,
+        message: "At least one admin must remain.",
+      };
+    }
+
+    const userEmail = userDoc.email;
+
+    if (CORE_ADMIN_EMAILS.includes(userEmail)) {
+      return {
+        success: false,
+        message: "Core admin accounts cannot be deleted.",
+      };
+    }
+
+    // Delete files
+    const userFiles = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.filesCollectionId,
+      [Query.equal("accountId", accountId), Query.limit(1000)],
+    );
+
+    for (const file of userFiles.documents) {
+      try {
+        await storage.deleteFile(appwriteConfig.bucketId, file.bucketFileId);
+
+        await databases.deleteDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.filesCollectionId,
+          file.$id,
+        );
+      } catch (err) {
+        console.error("File delete error:", err);
+      }
+    }
+
+    // Delete folders
+    const userFolders = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.foldersCollectionId,
+      [Query.equal("accountId", accountId), Query.limit(1000)],
+    );
+
+    for (const folder of userFolders.documents) {
+      await databases.deleteDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.foldersCollectionId,
+        folder.$id,
+      );
+    }
+
+    // Delete user document
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      userDocId,
+    );
+
+    // Delete Auth user
+    await users.delete(accountId);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete user error:", error);
+    return {
+      success: false,
+      message: error?.message || "Failed to delete user",
+    };
+  }
+};
+
+export const updateUserRole = async ({
+  userDocId,
+  newRole,
+  currentUserId,
+}: {
+  userDocId: string;
+  newRole: "admin" | "user";
+  currentUserId: string;
+}) => {
+  try {
+    const { databases } = await createAdminClient();
+
+    const currentUserDoc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      currentUserId,
+    );
+
+    if (currentUserDoc.role !== "admin") {
+      return {
+        success: false,
+        message: "Unauthorized action.",
+      };
+    }
+
+    // Prevent self-demotion (optional safety)
+    const userDoc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      userDocId,
+    );
+
+    const userEmail = userDoc.email;
+
+    if (CORE_ADMIN_EMAILS.includes(userEmail)) {
+      return {
+        success: false,
+        message: "Core admin roles cannot be modified.",
+      };
+    }
+
+    if (userDoc.accountId === currentUserId) {
+      return {
+        success: false,
+        message: "You cannot change your own role",
+      };
+    }
+
+    // 🔒 Prevent removing last admin
+    const admins = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      [Query.equal("role", "admin")],
+    );
+
+    if (userDoc.role === "admin" && newRole !== "admin" && admins.total <= 1) {
+      return {
+        success: false,
+        message: "At least one admin must remain.",
+      };
+    }
+
+    await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      userDocId,
+      {
+        role: newRole,
+      },
+    );
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update role error:", error);
+    return {
+      success: false,
+      message: error?.message || "Failed to update role",
+    };
   }
 };

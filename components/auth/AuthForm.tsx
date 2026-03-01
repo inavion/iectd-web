@@ -207,7 +207,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           )}
 
           {/* Temporarily disabled sign-up option */}
-          <div className="body-2 flex justify-center">
+          {/* <div className="body-2 flex justify-center">
             {type === "sign-in" ? (
               <>
                 <p className="text-light-100">Don&apos;t have an account?</p>
@@ -223,7 +223,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                 </Link>
               </>
             )}
-          </div>
+          </div> */}
         </form>
       </Form>
 
