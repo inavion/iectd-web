@@ -29,7 +29,7 @@ export default function ManageUsersClient({ users, currentUserId }: Props) {
         </button>
       </div>
 
-      <UsersListLayout users={users} />
+      <UsersListLayout users={users} currentUserId={currentUserId}/>
 
       {open && (
         <CreateUserModal

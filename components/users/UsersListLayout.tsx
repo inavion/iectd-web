@@ -1,9 +1,7 @@
 "use client";
 
-
 import BaseListLayout from "../documents/BaseListLayout";
 import UserRow from "./UserRow";
-
 
 interface User {
   $id: string;
@@ -15,9 +13,10 @@ interface User {
 
 interface Props {
   users: User[];
+  currentUserId: string;
 }
 
-export default function UsersListLayout({ users }: Props) {
+export default function UsersListLayout({ users, currentUserId }: Props) {
   return (
     <BaseListLayout
       items={users}
@@ -34,6 +33,7 @@ export default function UsersListLayout({ users }: Props) {
         <UserRow
           key={user.$id}
           user={user}
+          currentUserId={currentUserId}
           isSelected={isSelected}
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
