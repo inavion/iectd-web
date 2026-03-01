@@ -316,17 +316,20 @@ export const deleteUserByAdmin = async ({
   try {
     const { databases, storage, users } = await createAdminClient();
 
-    const currentUserDoc = await databases.getDocument(
+    const currentUserDocs = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
-      currentUserId, // make sure this is USER DOC ID
+      [Query.equal("accountId", currentUserId)],
     );
 
+    if (currentUserDocs.total === 0) {
+      return { success: false, message: "Unauthorized." };
+    }
+
+    const currentUserDoc = currentUserDocs.documents[0];
+
     if (currentUserDoc.role !== "admin") {
-      return {
-        success: false,
-        message: "Unauthorized action.",
-      };
+      return { success: false, message: "Unauthorized action." };
     }
 
     if (currentUserId === accountId) {
@@ -432,17 +435,20 @@ export const updateUserRole = async ({
   try {
     const { databases } = await createAdminClient();
 
-    const currentUserDoc = await databases.getDocument(
+    const currentUserDocs = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
-      currentUserId,
+      [Query.equal("accountId", currentUserId)],
     );
 
+    if (currentUserDocs.total === 0) {
+      return { success: false, message: "Unauthorized." };
+    }
+
+    const currentUserDoc = currentUserDocs.documents[0];
+
     if (currentUserDoc.role !== "admin") {
-      return {
-        success: false,
-        message: "Unauthorized action.",
-      };
+      return { success: false, message: "Unauthorized action." };
     }
 
     // Prevent self-demotion (optional safety)
@@ -467,6 +473,11 @@ export const updateUserRole = async ({
         message: "You cannot change your own role",
       };
     }
+
+    console.log("PROJECT:", appwriteConfig.projectId);
+    console.log("DATABASE:", appwriteConfig.databaseId);
+    console.log("COLLECTION:", appwriteConfig.usersCollectionId);
+    console.log("USER DOC ID:", userDocId);
 
     // 🔒 Prevent removing last admin
     const admins = await databases.listDocuments(
